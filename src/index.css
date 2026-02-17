@@ -43,3 +43,26 @@ body {
   width: min(50%, 22rem);
   min-width: 12rem;
 }
+
+.match-outline {
+  outline: 1px solid #000;
+}
+
+.match-red {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.match-blue {
+  background-color: #0d6efd;
+  color: #fff;
+}
+
+.match-controls .btn {
+  min-width: 5.5rem;
+}
+
+.sound {
+  position: absolute;
+  top: -100000em;
+}

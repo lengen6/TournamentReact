@@ -6,10 +6,12 @@ export function CompetitorsIndexPage() {
   const competitors = useTournamentStore((state) => state.competitors)
   const elimination = useTournamentStore((state) => state.elimination)
   const setElimination = useTournamentStore((state) => state.setElimination)
+  const beginEvent = useTournamentStore((state) => state.beginEvent)
   const navigate = useNavigate()
 
   const handleStartEvent = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    beginEvent(elimination)
     navigate(`/events?elimination=${elimination}`)
   }
 

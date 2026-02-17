@@ -1,46 +1,46 @@
-import { useState } from 'react'
-import type { FormEvent } from 'react'
+import { useState } from "react";
+import type { FormEvent } from "react";
 
 export type CompetitorFormValues = {
-  firstName: string
-  lastName: string
-}
+  firstName: string;
+  lastName: string;
+};
 
 type CompetitorFormProps = {
-  initialValues?: CompetitorFormValues
-  submitLabel: string
-  onSubmit: (values: CompetitorFormValues) => void
-}
+  initialValues?: CompetitorFormValues;
+  submitLabel: string;
+  onSubmit: (values: CompetitorFormValues) => void;
+};
 
-const validNamePattern = /^[a-zA-Z/'-]+$/
-const maxNameLength = 25
+const validNamePattern = /^[a-zA-Z/'-]+$/;
+const maxNameLength = 25;
 
 export function CompetitorForm({
   initialValues,
   submitLabel,
   onSubmit,
 }: CompetitorFormProps) {
-  const [firstName, setFirstName] = useState(initialValues?.firstName ?? '')
-  const [lastName, setLastName] = useState(initialValues?.lastName ?? '')
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [firstName, setFirstName] = useState(initialValues?.firstName ?? "");
+  const [lastName, setLastName] = useState(initialValues?.lastName ?? "");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+    event.preventDefault();
 
-    const trimmedFirstName = firstName.trim()
-    const trimmedLastName = lastName.trim()
+    const trimmedFirstName = firstName.trim();
+    const trimmedLastName = lastName.trim();
 
     if (!trimmedFirstName || !trimmedLastName) {
-      setErrorMessage('First and Last Name are required.')
-      return
+      setErrorMessage("First and Last Name are required.");
+      return;
     }
 
     if (
       trimmedFirstName.length > maxNameLength ||
       trimmedLastName.length > maxNameLength
     ) {
-      setErrorMessage(`Names must be ${maxNameLength} characters or fewer.`)
-      return
+      setErrorMessage(`Names must be ${maxNameLength} characters or fewer.`);
+      return;
     }
 
     if (
@@ -48,14 +48,14 @@ export function CompetitorForm({
       !validNamePattern.test(trimmedLastName)
     ) {
       setErrorMessage(
-        'Names can only include letters, apostrophes, slashes, and hyphens.',
-      )
-      return
+        "Names can only include letters, apostrophes, slashes, and hyphens.",
+      );
+      return;
     }
 
-    setErrorMessage(null)
-    onSubmit({ firstName: trimmedFirstName, lastName: trimmedLastName })
-  }
+    setErrorMessage(null);
+    onSubmit({ firstName: trimmedFirstName, lastName: trimmedLastName });
+  };
 
   return (
     <form onSubmit={handleSubmit}>
@@ -100,5 +100,5 @@ export function CompetitorForm({
         </button>
       </div>
     </form>
-  )
+  );
 }
