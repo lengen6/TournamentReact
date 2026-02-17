@@ -314,10 +314,10 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
 
         // If winners are odd, pair one winner with the strongest available loser.
         if (winnersAfterBye.length % 2 !== 0 && losersAfterBye.length > 0) {
-          const redCompetitor = pickPlayer(winnersAfterBye)
+          const redCompetitor = pickCompetitorByWins(winnersAfterBye, 'min')
           const blueCompetitor = pickCompetitorByWins(losersAfterBye, 'max')
 
-          if (blueCompetitor) {
+          if (redCompetitor && blueCompetitor) {
             const activeMatch = buildActiveMatch(
               redCompetitor,
               blueCompetitor,
