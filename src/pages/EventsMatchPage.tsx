@@ -99,6 +99,13 @@ export function EventsMatchPage() {
   const redPointsEnabled = timeExpired && redScore > blueScore
   const bluePointsEnabled = timeExpired && blueScore > redScore
   const decisionEnabled = timeExpired && redScore === blueScore
+  const bracketLabel =
+    activeMatch.round === 1 &&
+    activeMatch.bracket === 'Winner' &&
+    redCompetitor.losses === 0 &&
+    blueCompetitor.losses === 0
+      ? 'Initial'
+      : activeMatch.bracket
 
   const handleTimerStart = () => {
     if (hasStarted) {
@@ -162,7 +169,7 @@ export function EventsMatchPage() {
       <div className="row">
         <div className="col match-outline text-center py-2">
           <h2 className="float-md-start mb-2 mb-md-0">
-            {redCompetitor.bracket}&apos;s Bracket
+            {bracketLabel} Bracket
           </h2>
           <h2 className="float-md-end mb-0">
             Round: {activeMatch.round} Match: {activeMatch.matchNumber}
