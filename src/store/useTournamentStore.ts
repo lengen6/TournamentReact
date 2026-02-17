@@ -9,6 +9,7 @@ export type ActiveMatch = {
   blueCompetitorId: number
   round: number
   matchNumber: number
+  bracket: 'Winner' | 'Loser'
 }
 
 export type AdvanceEventResult =
@@ -34,6 +35,7 @@ type TournamentState = {
   elimination: number
   currentRound: number
   currentMatchNumber: number
+  roundByeAssigned: boolean
   activeMatch: ActiveMatch | null
   setCompetitors: (competitors: Competitor[]) => void
   setMatches: (matches: Match[]) => void
@@ -75,21 +77,24 @@ const pickPlayer = (bracket: Competitor[]): Competitor => {
   return competitor
 }
 
-const determineByes = (bracket: Competitor[]) => {
-  const wasPreviouslyRun = bracket.some((competitor) => competitor.previousParticipant)
-  if (wasPreviouslyRun || bracket.length % 2 === 0 || bracket.length === 0) {
-    return
+const pickCompetitorByWins = (
+  competitors: Competitor[],
+  direction: 'max' | 'min',
+): Competitor | null => {
+  if (competitors.length === 0) {
+    return null
   }
 
-  const competitorIndex = Math.floor(Math.random() * bracket.length)
-  const byeCompetitor = bracket[competitorIndex]
-  byeCompetitor.byes += 1
-  byeCompetitor.bracket = 'Bye'
-  byeCompetitor.previousParticipant = true
-}
+  const targetWins =
+    direction === 'max'
+      ? Math.max(...competitors.map((competitor) => competitor.wins))
+      : Math.min(...competitors.map((competitor) => competitor.wins))
+  const tiedCompetitors = competitors.filter(
+    (competitor) => competitor.wins === targetWins,
+  )
 
-const isBracketFinished = (bracket: Competitor[]): boolean =>
-  bracket.every((competitor) => competitor.previousParticipant)
+  return tiedCompetitors[Math.floor(Math.random() * tiedCompetitors.length)]
+}
 
 const isRoundOver = (winners: Competitor[], losers: Competitor[]): boolean => {
   for (const competitor of winners) {
@@ -111,27 +116,6 @@ const resetParticipants = (competitors: Competitor[]) => {
   for (const competitor of competitors) {
     competitor.previousParticipant = false
   }
-}
-
-type ArrangeMatchResult =
-  | { status: 'matched'; redCompetitor: Competitor; blueCompetitor: Competitor }
-  | { status: 'none' }
-
-const arrangeMatch = (bracket: Competitor[]): ArrangeMatchResult => {
-  const viableCompetitors = bracket.filter((competitor) => !competitor.previousParticipant)
-  if (viableCompetitors.length > 1) {
-    const redCompetitor = pickPlayer(viableCompetitors)
-    const blueCompetitor = pickPlayer(viableCompetitors)
-    return { status: 'matched', redCompetitor, blueCompetitor }
-  }
-
-  if (viableCompetitors.length === 1) {
-    viableCompetitors[0].byes += 1
-    viableCompetitors[0].bracket = 'Bye'
-    viableCompetitors[0].previousParticipant = true
-  }
-
-  return { status: 'none' }
 }
 
 const formatTwoDigits = (value: number): string =>
@@ -181,6 +165,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
   elimination: 2,
   currentRound: 0,
   currentMatchNumber: 0,
+  roundByeAssigned: false,
   activeMatch: null,
   setCompetitors: (competitors) => set({ competitors }),
   setMatches: (matches) => set({ matches }),
@@ -201,6 +186,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
       elimination: toAllowedEliminationValue(elimination),
       currentRound: 0,
       currentMatchNumber: 0,
+      roundByeAssigned: false,
       activeMatch: null,
     })),
   advanceEvent: () => {
@@ -210,10 +196,12 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
       const competitors = cloneCompetitors(state.competitors)
       let round = state.currentRound
       let matchNumber = state.currentMatchNumber
+      let roundByeAssigned = state.roundByeAssigned
 
       const buildActiveMatch = (
         redCompetitor: Competitor,
         blueCompetitor: Competitor,
+        bracket: 'Winner' | 'Loser',
       ): ActiveMatch => {
         if (round === 0) {
           round = 1
@@ -226,6 +214,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
           blueCompetitorId: blueCompetitor.competitorId,
           round,
           matchNumber,
+          bracket,
         }
       }
 
@@ -245,7 +234,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
 
       if (competitors.length < 2) {
         advanceResult = { status: 'competitor_count_error' }
-        return { ...state, activeMatch: null }
+        return { ...state, activeMatch: null, roundByeAssigned }
       }
 
       for (let iteration = 0; iteration < 50; iteration += 1) {
@@ -268,6 +257,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
             competitors,
             currentRound: round,
             currentMatchNumber: matchNumber,
+            roundByeAssigned,
             activeMatch: null,
           }
         }
@@ -276,75 +266,62 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
           if (round > 0 && isRoundOver(winners, losers)) {
             matchNumber = 0
             round += 1
+            roundByeAssigned = false
             resetParticipants(winners)
             resetParticipants(losers)
           }
 
-          const activeMatch = buildActiveMatch(winners[0], losers[0])
+          const activeMatch = buildActiveMatch(winners[0], losers[0], 'Winner')
           advanceResult = buildMatchReadyResult(activeMatch)
           return {
             ...state,
             competitors,
             currentRound: round,
             currentMatchNumber: matchNumber,
+            roundByeAssigned,
             activeMatch,
           }
         }
 
-        if (winners.length > 0) {
-          determineByes(winners)
-          if (!isBracketFinished(winners)) {
-            const winnersMatch = arrangeMatch(winners)
-            if (winnersMatch.status === 'matched') {
-              const activeMatch = buildActiveMatch(
-                winnersMatch.redCompetitor,
-                winnersMatch.blueCompetitor,
-              )
-              advanceResult = buildMatchReadyResult(activeMatch)
-              return {
-                ...state,
-                competitors,
-                currentRound: round,
-                currentMatchNumber: matchNumber,
-                activeMatch,
-              }
-            }
+        const availableWinners = winners.filter(
+          (competitor) => !competitor.previousParticipant,
+        )
+        const availableLosers = losers.filter(
+          (competitor) => !competitor.previousParticipant,
+        )
+        const byeRequired = (winners.length + losers.length) % 2 !== 0
+
+        if (byeRequired && !roundByeAssigned) {
+          let byeCompetitor = pickCompetitorByWins(availableLosers, 'min')
+          if (!byeCompetitor) {
+            // Fallback for rounds before the losers bracket exists.
+            byeCompetitor = pickCompetitorByWins(availableWinners, 'min')
+          }
+
+          if (byeCompetitor) {
+            byeCompetitor.byes += 1
+            byeCompetitor.previousParticipant = true
+            roundByeAssigned = true
           }
         }
 
-        if (losers.length > 0) {
-          determineByes(losers)
-          if (!isBracketFinished(losers)) {
-            const losersMatch = arrangeMatch(losers)
-            if (losersMatch.status === 'matched') {
-              const activeMatch = buildActiveMatch(
-                losersMatch.redCompetitor,
-                losersMatch.blueCompetitor,
-              )
-              advanceResult = buildMatchReadyResult(activeMatch)
-              return {
-                ...state,
-                competitors,
-                currentRound: round,
-                currentMatchNumber: matchNumber,
-                activeMatch,
-              }
-            }
-          }
-        }
+        const winnersAfterBye = winners.filter(
+          (competitor) => !competitor.previousParticipant,
+        )
+        const losersAfterBye = losers.filter(
+          (competitor) => !competitor.previousParticipant,
+        )
 
-        const byeCompetitors = competitors.filter((competitor) => competitor.bracket === 'Bye')
-        if (byeCompetitors.length > 1) {
-          for (const competitor of byeCompetitors) {
-            competitor.byes = Math.max(0, competitor.byes - 1)
-            competitor.previousParticipant = false
-          }
+        // If winners are odd, pair one winner with the strongest available loser.
+        if (winnersAfterBye.length % 2 !== 0 && losersAfterBye.length > 0) {
+          const redCompetitor = pickCompetitorByWins(winnersAfterBye, 'min')
+          const blueCompetitor = pickCompetitorByWins(losersAfterBye, 'max')
 
-          const byeMatch = arrangeMatch(byeCompetitors)
-          if (byeMatch.status === 'matched') {
+          if (redCompetitor && blueCompetitor) {
             const activeMatch = buildActiveMatch(
-              byeMatch.redCompetitor,
-              byeMatch.blueCompetitor,
+              redCompetitor,
+              blueCompetitor,
+              'Winner',
             )
             advanceResult = buildMatchReadyResult(activeMatch)
             return {
@@ -352,8 +329,43 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
               competitors,
               currentRound: round,
               currentMatchNumber: matchNumber,
+              roundByeAssigned,
               activeMatch,
             }
+          }
+        }
+
+        if (winnersAfterBye.length > 1) {
+          const activeMatch = buildActiveMatch(
+            pickPlayer(winnersAfterBye),
+            pickPlayer(winnersAfterBye),
+            'Winner',
+          )
+          advanceResult = buildMatchReadyResult(activeMatch)
+          return {
+            ...state,
+            competitors,
+            currentRound: round,
+            currentMatchNumber: matchNumber,
+            roundByeAssigned,
+            activeMatch,
+          }
+        }
+
+        if (losersAfterBye.length > 1) {
+          const activeMatch = buildActiveMatch(
+            pickPlayer(losersAfterBye),
+            pickPlayer(losersAfterBye),
+            'Loser',
+          )
+          advanceResult = buildMatchReadyResult(activeMatch)
+          return {
+            ...state,
+            competitors,
+            currentRound: round,
+            currentMatchNumber: matchNumber,
+            roundByeAssigned,
+            activeMatch,
           }
         }
 
@@ -362,6 +374,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
         if (isRoundOver(currentWinners, currentLosers)) {
           matchNumber = 0
           round += 1
+          roundByeAssigned = false
           resetParticipants(currentWinners)
           resetParticipants(currentLosers)
           continue
@@ -373,6 +386,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
           competitors,
           currentRound: round,
           currentMatchNumber: matchNumber,
+          roundByeAssigned,
           activeMatch: null,
         }
       }
@@ -383,6 +397,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
         competitors,
         currentRound: round,
         currentMatchNumber: matchNumber,
+        roundByeAssigned,
         activeMatch: null,
       }
     })
@@ -437,7 +452,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
         matchId: getNextMatchId(matches),
         roundNumber: activeMatch.round,
         matchNumber: activeMatch.matchNumber,
-        bracket: redCompetitor.bracket,
+        bracket: activeMatch.bracket,
         competitorRedScore: payload.redScore,
         competitorBlueScore: payload.blueScore,
         victoryMethod: payload.victoryMethod,
@@ -486,6 +501,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
       matches: [],
       currentRound: 0,
       currentMatchNumber: 0,
+      roundByeAssigned: false,
       activeMatch: null,
     })),
   addCompetitor: ({ firstName, lastName }) => {
@@ -555,6 +571,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
       elimination: 2,
       currentRound: 0,
       currentMatchNumber: 0,
+      roundByeAssigned: false,
       activeMatch: null,
     }),
 }))
