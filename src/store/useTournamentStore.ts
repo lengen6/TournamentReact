@@ -273,6 +273,13 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
         }
 
         if (winners.length === 1 && losers.length === 1) {
+          if (round > 0 && isRoundOver(winners, losers)) {
+            matchNumber = 0
+            round += 1
+            resetParticipants(winners)
+            resetParticipants(losers)
+          }
+
           const activeMatch = buildActiveMatch(winners[0], losers[0])
           advanceResult = buildMatchReadyResult(activeMatch)
           return {
