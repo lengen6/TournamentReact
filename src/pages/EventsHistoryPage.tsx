@@ -82,7 +82,7 @@ export function EventsHistoryPage() {
   ])
 
   return (
-    <main className="container py-4">
+    <main className="container py-4 page-events-history">
       <h3>Filter Results by:</h3>
       <br />
       <div className="table-responsive">

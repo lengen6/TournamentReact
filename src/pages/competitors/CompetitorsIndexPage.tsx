@@ -16,7 +16,7 @@ export function CompetitorsIndexPage() {
   }
 
   return (
-    <main className="container py-4">
+    <main className="container py-4 page-competitors-index">
       <h1 className="text-center">Create Your Roster</h1>
 
       <p className="text-center">

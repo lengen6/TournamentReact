@@ -1,22 +1,24 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { useTournamentStore } from '../store/useTournamentStore'
+import { Link, useNavigate } from "react-router-dom";
+import { useTournamentStore } from "../store/useTournamentStore";
 
 export function EventsResultsPage() {
-  const competitors = useTournamentStore((state) => state.competitors)
+  const competitors = useTournamentStore((state) => state.competitors);
   const resetCompetitorsForNextEvent = useTournamentStore(
     (state) => state.resetCompetitorsForNextEvent,
-  )
-  const navigate = useNavigate()
+  );
+  const navigate = useNavigate();
 
-  const results = [...competitors].sort((left, right) => left.place - right.place)
+  const results = [...competitors].sort(
+    (left, right) => left.place - right.place,
+  );
 
   const handleResetForAnotherEvent = () => {
-    resetCompetitorsForNextEvent()
-    navigate('/competitors')
-  }
+    resetCompetitorsForNextEvent();
+    navigate("/competitors");
+  };
 
   return (
-    <main className="container py-4">
+    <main className="container py-4 page-events-results">
       <h1 className="text-center">Competitor Results</h1>
 
       <div className="table-responsive mt-4">
@@ -70,11 +72,8 @@ export function EventsResultsPage() {
           <div className="col match-outline p-3">
             <Link to="/events/history">View Results by Match</Link>
           </div>
-          <div className="col match-outline p-3">
-            <Link to="/competitors">Back to Setup (Keep Data)</Link>
-          </div>
         </div>
       </div>
     </main>
-  )
+  );
 }
