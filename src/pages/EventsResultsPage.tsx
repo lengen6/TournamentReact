@@ -18,7 +18,7 @@ export function EventsResultsPage() {
   };
 
   return (
-    <main className="container py-4">
+    <main className="container py-4 page-events-results">
       <h1 className="text-center">Competitor Results</h1>
 
       <div className="table-responsive mt-4">

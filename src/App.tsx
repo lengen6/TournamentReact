@@ -16,7 +16,6 @@ import { MatchHistoryErrorPage } from './pages/MatchHistoryErrorPage'
 function App() {
   return (
     <Routes>
-      <Route path="events/match" element={<EventsMatchPage />} />
       <Route element={<SiteLayout />}>
         <Route index element={<HomePage />} />
         <Route path="competitors" element={<CompetitorsIndexPage />} />
@@ -25,6 +24,7 @@ function App() {
         <Route path="competitors/:id/details" element={<CompetitorsDetailsPage />} />
         <Route path="competitors/:id/delete" element={<CompetitorsDeletePage />} />
         <Route path="events" element={<EventsIndexPage />} />
+        <Route path="events/match" element={<EventsMatchPage />} />
         <Route path="events/results" element={<EventsResultsPage />} />
         <Route path="events/history" element={<EventsHistoryPage />} />
         <Route path="match-history-error" element={<MatchHistoryErrorPage />} />

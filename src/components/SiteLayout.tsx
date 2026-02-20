@@ -1,13 +1,35 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 
 const buildNavLinkClassName = ({ isActive }: { isActive: boolean }) =>
   `nav-link px-3 site-nav-link${isActive ? ' site-nav-link-active' : ''}`
 
+type ThemeMode = 'light' | 'dark'
+const themeStorageKey = 'tie-ren-theme'
+
+const getPreferredTheme = (): ThemeMode => {
+  if (typeof window === 'undefined') {
+    return 'dark'
+  }
+
+  const storedTheme = window.localStorage.getItem(themeStorageKey)
+  if (storedTheme === 'light' || storedTheme === 'dark') {
+    return storedTheme
+  }
+
+  return 'dark'
+}
+
 export function SiteLayout() {
   const { pathname } = useLocation()
   const [openPathname, setOpenPathname] = useState<string | null>(null)
+  const [theme, setTheme] = useState<ThemeMode>(() => getPreferredTheme())
   const isMenuOpen = openPathname === pathname
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    window.localStorage.setItem(themeStorageKey, theme)
+  }, [theme])
 
   const toggleMenu = () => {
     setOpenPathname((currentValue) => (currentValue === pathname ? null : pathname))
@@ -15,6 +37,10 @@ export function SiteLayout() {
 
   const closeMenu = () => {
     setOpenPathname(null)
+  }
+
+  const toggleTheme = () => {
+    setTheme((currentTheme) => (currentTheme === 'light' ? 'dark' : 'light'))
   }
 
   return (
@@ -78,6 +104,15 @@ export function SiteLayout() {
                   </NavLink>
                 </li>
               </ul>
+              <button
+                type="button"
+                className="btn site-theme-toggle ms-lg-3 mt-3 mt-lg-0"
+                onClick={toggleTheme}
+                aria-pressed={theme === 'dark'}
+                aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              >
+                {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+              </button>
             </div>
           </div>
         </nav>
