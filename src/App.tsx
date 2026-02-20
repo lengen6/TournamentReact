@@ -12,6 +12,7 @@ import { EventsMatchPage } from './pages/EventsMatchPage'
 import { EventsResultsPage } from './pages/EventsResultsPage'
 import { HomePage } from './pages/HomePage'
 import { MatchHistoryErrorPage } from './pages/MatchHistoryErrorPage'
+import { StandaloneMatchPage } from './pages/StandaloneMatchPage'
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="competitors/:id/delete" element={<CompetitorsDeletePage />} />
         <Route path="events" element={<EventsIndexPage />} />
         <Route path="events/match" element={<EventsMatchPage />} />
+        <Route path="standalone-match" element={<StandaloneMatchPage />} />
         <Route path="events/results" element={<EventsResultsPage />} />
         <Route path="events/history" element={<EventsHistoryPage />} />
         <Route path="match-history-error" element={<MatchHistoryErrorPage />} />
