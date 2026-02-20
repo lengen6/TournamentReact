@@ -86,6 +86,9 @@ export function CompetitorsIndexPage() {
               <button type="submit" className="btn btn-primary">
                 Click to Start Event
               </button>
+              <p className="mt-3 mb-0">
+                <Link to="/standalone-match">Or open standalone match controls</Link>
+              </p>
             </form>
           </div>
         </div>

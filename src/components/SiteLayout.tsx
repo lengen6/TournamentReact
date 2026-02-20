@@ -87,6 +87,15 @@ export function SiteLayout() {
                 </li>
                 <li className="nav-item">
                   <NavLink
+                    to="/standalone-match"
+                    className={buildNavLinkClassName}
+                    onClick={closeMenu}
+                  >
+                    Standalone
+                  </NavLink>
+                </li>
+                <li className="nav-item">
+                  <NavLink
                     to="/events/results"
                     className={buildNavLinkClassName}
                     onClick={closeMenu}

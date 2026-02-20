@@ -589,6 +589,16 @@ main > *:nth-child(4) {
   transform: none;
 }
 
+.standalone-match-announcement {
+  margin-top: 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(148, 163, 184, 0.36);
+  background: rgba(241, 245, 249, 0.94);
+  color: #0f172a;
+  padding: 0.78rem 0.92rem;
+  font-weight: 700;
+}
+
 .table-responsive {
   margin-top: clamp(0.8rem, 1.7vw, 1.2rem);
   border: 1px solid var(--border-soft);
