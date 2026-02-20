@@ -65,7 +65,7 @@ export function EventsMatchPage() {
             ? { minutes: previousClock.minutes, seconds: previousClock.seconds - 1 }
             : { minutes: Math.max(0, previousClock.minutes - 1), seconds: 59 }
 
-        if (nextClock.seconds % 30 === 0 && !(nextClock.minutes === 0 && nextClock.seconds === 0)) {
+        if (nextClock.minutes === 0 && nextClock.seconds === 30) {
           playAudio(highBeepRef.current)
           window.setTimeout(() => playAudio(highBeepRef.current), 500)
         }
