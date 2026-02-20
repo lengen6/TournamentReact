@@ -1,23 +1,20 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 
 const buildNavLinkClassName = ({ isActive }: { isActive: boolean }) =>
   `nav-link px-3 site-nav-link${isActive ? ' site-nav-link-active' : ''}`
 
 export function SiteLayout() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { pathname } = useLocation()
-
-  useEffect(() => {
-    setIsMenuOpen(false)
-  }, [pathname])
+  const [openPathname, setOpenPathname] = useState<string | null>(null)
+  const isMenuOpen = openPathname === pathname
 
   const toggleMenu = () => {
-    setIsMenuOpen((currentValue) => !currentValue)
+    setOpenPathname((currentValue) => (currentValue === pathname ? null : pathname))
   }
 
   const closeMenu = () => {
-    setIsMenuOpen(false)
+    setOpenPathname(null)
   }
 
   return (
@@ -40,9 +37,9 @@ export function SiteLayout() {
             </button>
             <div
               id="site-navbar-navigation"
-              className={`collapse navbar-collapse${isMenuOpen ? ' show' : ''}`}
+              className={`collapse navbar-collapse site-nav-collapse${isMenuOpen ? ' show' : ''}`}
             >
-              <ul className="navbar-nav ms-auto mt-3 mt-lg-0 flex-column flex-lg-row">
+              <ul className="navbar-nav site-nav-list ms-auto mt-3 mt-lg-0 flex-column flex-lg-row">
                 <li className="nav-item">
                   <NavLink to="/" end className={buildNavLinkClassName} onClick={closeMenu}>
                     Home
