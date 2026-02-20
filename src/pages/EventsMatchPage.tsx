@@ -106,6 +106,28 @@ export function EventsMatchPage() {
     blueCompetitor.losses === 0
       ? 'Initial'
       : activeMatch.bracket
+  const redCompetitorName = [redCompetitor.firstName, redCompetitor.lastName]
+    .filter(Boolean)
+    .join(' ')
+  const blueCompetitorName = [blueCompetitor.firstName, blueCompetitor.lastName]
+    .filter(Boolean)
+    .join(' ')
+  const matchStatus = timeExpired
+    ? 'Time Expired'
+    : isRunning && !isPaused
+      ? 'Live'
+      : isPaused
+        ? 'Paused'
+        : hasStarted
+          ? 'Awaiting Result'
+          : 'Ready'
+  const matchStatusClassName = timeExpired
+    ? 'active-match-state-expired'
+    : isRunning && !isPaused
+      ? 'active-match-state-live'
+      : isPaused
+        ? 'active-match-state-paused'
+        : 'active-match-state-ready'
 
   const handleTimerStart = () => {
     if (hasStarted) {
@@ -165,254 +187,219 @@ export function EventsMatchPage() {
   }
 
   return (
-    <main className="container py-4">
-      <div className="row">
-        <div className="col match-outline text-center py-2">
-          <h2 className="float-md-start mb-2 mb-md-0">
-            {bracketLabel} Bracket
-          </h2>
-          <h2 className="float-md-end mb-0">
-            Round: {activeMatch.round} Match: {activeMatch.matchNumber}
-          </h2>
+    <main className="container py-4 active-match-page">
+      <section className="active-match-header">
+        <p className="active-match-kicker mb-0">Live Match Control</p>
+        <div className="active-match-meta">
+          <span className="active-match-pill">{bracketLabel} Bracket</span>
+          <span className="active-match-pill">Round {activeMatch.round}</span>
+          <span className="active-match-pill">Match {activeMatch.matchNumber}</span>
         </div>
-      </div>
+        <p className={`active-match-state mb-0 ${matchStatusClassName}`}>
+          {matchStatus}
+        </p>
+      </section>
 
-      <div className="row align-items-center mt-4">
-        <div className="col match-outline text-center">
-          <h3 className="my-2">Minutes</h3>
-        </div>
-        <div className="col match-outline text-center">
-          <h3 className="my-2">Seconds</h3>
-        </div>
-      </div>
-      <div className="row align-items-center">
-        <div className="col match-outline text-center">
-          <h1 className="my-2">
-            <input
-              id="minute"
-              type="number"
-              max={60}
-              min={0}
-              value={clock.minutes}
-              className="form-control text-center"
-              onChange={(event) =>
-                setClock((previousClock) => ({
-                  ...previousClock,
-                  minutes: clampTimeValue(Number(event.target.value)),
-                }))
-              }
-            />
-          </h1>
-        </div>
-        <div className="col match-outline text-center">
-          <h1 className="my-2">
-            <input
-              id="second"
-              type="number"
-              max={60}
-              min={0}
-              value={clock.seconds}
-              className="form-control text-center"
-              onChange={(event) =>
-                setClock((previousClock) => ({
-                  ...previousClock,
-                  seconds: clampTimeValue(Number(event.target.value)),
-                }))
-              }
-            />
-          </h1>
-        </div>
-      </div>
-
-      <div className="row align-items-center match-controls">
-        <div className="col match-outline text-center">
-          <button
-            id="start"
-            type="button"
-            className="btn btn-outline-primary my-2"
-            onClick={handleTimerStart}
-            disabled={hasStarted}
-          >
-            Start
-          </button>
-        </div>
-        <div className="col match-outline text-center">
-          <button
-            id="reset"
-            type="button"
-            className="btn btn-outline-secondary my-2"
-            onClick={handleTimerReset}
-          >
-            Reset
-          </button>
-        </div>
-        <div className="col match-outline text-center">
-          <button
-            id="pause"
-            type="button"
-            className="btn btn-outline-warning my-2"
-            onClick={handleTimerPause}
-          >
-            Pause
-          </button>
-        </div>
-        <div className="col match-outline text-center">
-          <button
-            id="play"
-            type="button"
-            className="btn btn-outline-success my-2"
-            onClick={handleTimerResume}
-          >
-            Resume
-          </button>
-        </div>
-      </div>
-
-      <div className="row align-items-center mt-4">
-        <div className="col match-outline text-center match-red">
-          <h1 className="my-3">
-            {redCompetitor.firstName} {redCompetitor.lastName}
-          </h1>
-        </div>
-        <div className="col match-outline text-center match-blue">
-          <h1 className="my-3">
-            {blueCompetitor.firstName} {blueCompetitor.lastName}
-          </h1>
-        </div>
-      </div>
-
-      <div className="row align-items-center">
-        <div className="col match-outline text-center">
-          <button
-            type="button"
-            className="btn btn-outline-danger my-2"
-            onClick={() => setRedScore((score) => score + 1)}
-          >
-            + Red
-          </button>
-        </div>
-        <div className="col match-outline text-center">
-          <button
-            type="button"
-            className="btn btn-outline-danger my-2"
-            onClick={() => setRedScore((score) => Math.max(0, score - 1))}
-          >
-            - Red
-          </button>
-        </div>
-        <div className="col match-outline text-center">
-          <button
-            type="button"
-            className="btn btn-outline-primary my-2"
-            onClick={() => setBlueScore((score) => score + 1)}
-          >
-            + Blue
-          </button>
-        </div>
-        <div className="col match-outline text-center">
-          <button
-            type="button"
-            className="btn btn-outline-primary my-2"
-            onClick={() => setBlueScore((score) => Math.max(0, score - 1))}
-          >
-            - Blue
-          </button>
-        </div>
-      </div>
-
-      <div className="row align-items-center">
-        <div className="col match-outline text-center">
-          <h2 className="my-2">{redScore}</h2>
-        </div>
-        <div className="col match-outline text-center">
-          <h2 className="my-2">{blueScore}</h2>
-        </div>
-      </div>
-
-      <div className="row mt-4 g-3">
-        <div className="col-md-6">
-          <div className="card">
-            <div className="card-body">
-              <h3 className="card-title">
-                {redCompetitor.firstName} {redCompetitor.lastName} Wins
-              </h3>
-              <div className="d-flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={() => handleMatchSubmit(true, 'Submission')}
-                >
-                  Sub
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={() => handleMatchSubmit(true, 'Opponent Disqualification')}
-                >
-                  DQ
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-danger points"
-                  disabled={!redPointsEnabled}
-                  onClick={() => handleMatchSubmit(true, 'Points')}
-                >
-                  Points
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-danger decision"
-                  disabled={!decisionEnabled}
-                  onClick={() => handleMatchSubmit(true, 'Decision')}
-                >
-                  Decision
-                </button>
-              </div>
-            </div>
+      <section className="active-match-board">
+        <article className="active-match-fighter active-match-fighter-red">
+          <p className="active-match-corner-label mb-2">Red Corner</p>
+          <h2 className="active-match-fighter-name">{redCompetitorName}</h2>
+          <div className="active-match-score-controls">
+            <button
+              type="button"
+              className="btn btn-outline-light active-match-score-btn"
+              aria-label={`Decrease ${redCompetitorName} score`}
+              onClick={() => setRedScore((score) => Math.max(0, score - 1))}
+            >
+              -
+            </button>
+            <p className="active-match-score-value mb-0">{redScore}</p>
+            <button
+              type="button"
+              className="btn btn-outline-light active-match-score-btn"
+              aria-label={`Increase ${redCompetitorName} score`}
+              onClick={() => setRedScore((score) => score + 1)}
+            >
+              +
+            </button>
           </div>
-        </div>
-        <div className="col-md-6">
-          <div className="card">
-            <div className="card-body">
-              <h3 className="card-title">
-                {blueCompetitor.firstName} {blueCompetitor.lastName} Wins
-              </h3>
-              <div className="d-flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => handleMatchSubmit(false, 'Submission')}
-                >
-                  Sub
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => handleMatchSubmit(false, 'Opponent Disqualification')}
-                >
-                  DQ
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary points"
-                  disabled={!bluePointsEnabled}
-                  onClick={() => handleMatchSubmit(false, 'Points')}
-                >
-                  Points
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary decision"
-                  disabled={!decisionEnabled}
-                  onClick={() => handleMatchSubmit(false, 'Decision')}
-                >
-                  Decision
-                </button>
-              </div>
-            </div>
+        </article>
+
+        <article className="active-match-clock-card">
+          <p className="active-match-clock-label mb-2">Round Clock</p>
+          <div className="active-match-time-inputs">
+            <label htmlFor="minute" className="active-match-time-field-group">
+              <span>Minutes</span>
+              <input
+                id="minute"
+                type="number"
+                max={60}
+                min={0}
+                value={clock.minutes}
+                className="form-control text-center active-match-time-field"
+                onChange={(event) =>
+                  setClock((previousClock) => ({
+                    ...previousClock,
+                    minutes: clampTimeValue(Number(event.target.value)),
+                  }))
+                }
+              />
+            </label>
+            <span className="active-match-time-separator">:</span>
+            <label htmlFor="second" className="active-match-time-field-group">
+              <span>Seconds</span>
+              <input
+                id="second"
+                type="number"
+                max={60}
+                min={0}
+                value={clock.seconds}
+                className="form-control text-center active-match-time-field"
+                onChange={(event) =>
+                  setClock((previousClock) => ({
+                    ...previousClock,
+                    seconds: clampTimeValue(Number(event.target.value)),
+                  }))
+                }
+              />
+            </label>
           </div>
-        </div>
-      </div>
+
+          <div className="active-match-timer-controls match-controls">
+            <button
+              id="start"
+              type="button"
+              className="btn btn-outline-primary"
+              onClick={handleTimerStart}
+              disabled={hasStarted}
+            >
+              Start
+            </button>
+            <button
+              id="reset"
+              type="button"
+              className="btn btn-outline-secondary"
+              onClick={handleTimerReset}
+            >
+              Reset
+            </button>
+            <button
+              id="pause"
+              type="button"
+              className="btn btn-outline-warning"
+              onClick={handleTimerPause}
+            >
+              Pause
+            </button>
+            <button
+              id="play"
+              type="button"
+              className="btn btn-outline-success"
+              onClick={handleTimerResume}
+            >
+              Resume
+            </button>
+          </div>
+        </article>
+
+        <article className="active-match-fighter active-match-fighter-blue">
+          <p className="active-match-corner-label mb-2">Blue Corner</p>
+          <h2 className="active-match-fighter-name">{blueCompetitorName}</h2>
+          <div className="active-match-score-controls">
+            <button
+              type="button"
+              className="btn btn-outline-light active-match-score-btn"
+              aria-label={`Decrease ${blueCompetitorName} score`}
+              onClick={() => setBlueScore((score) => Math.max(0, score - 1))}
+            >
+              -
+            </button>
+            <p className="active-match-score-value mb-0">{blueScore}</p>
+            <button
+              type="button"
+              className="btn btn-outline-light active-match-score-btn"
+              aria-label={`Increase ${blueCompetitorName} score`}
+              onClick={() => setBlueScore((score) => score + 1)}
+            >
+              +
+            </button>
+          </div>
+        </article>
+      </section>
+
+      <section className="active-match-results">
+        <article className="active-match-result-card active-match-result-card-red">
+          <h3 className="active-match-result-title">{redCompetitorName} Wins</h3>
+          <div className="active-match-result-buttons">
+            <button
+              type="button"
+              className="btn active-match-result-btn"
+              onClick={() => handleMatchSubmit(true, 'Submission')}
+            >
+              Submission
+            </button>
+            <button
+              type="button"
+              className="btn active-match-result-btn"
+              onClick={() => handleMatchSubmit(true, 'Opponent Disqualification')}
+            >
+              DQ
+            </button>
+            <button
+              type="button"
+              className="btn active-match-result-btn"
+              disabled={!redPointsEnabled}
+              onClick={() => handleMatchSubmit(true, 'Points')}
+            >
+              Points
+            </button>
+            <button
+              type="button"
+              className="btn active-match-result-btn"
+              disabled={!decisionEnabled}
+              onClick={() => handleMatchSubmit(true, 'Decision')}
+            >
+              Decision
+            </button>
+          </div>
+        </article>
+
+        <article className="active-match-result-card active-match-result-card-blue">
+          <h3 className="active-match-result-title">{blueCompetitorName} Wins</h3>
+          <div className="active-match-result-buttons">
+            <button
+              type="button"
+              className="btn active-match-result-btn"
+              onClick={() => handleMatchSubmit(false, 'Submission')}
+            >
+              Submission
+            </button>
+            <button
+              type="button"
+              className="btn active-match-result-btn"
+              onClick={() => handleMatchSubmit(false, 'Opponent Disqualification')}
+            >
+              DQ
+            </button>
+            <button
+              type="button"
+              className="btn active-match-result-btn"
+              disabled={!bluePointsEnabled}
+              onClick={() => handleMatchSubmit(false, 'Points')}
+            >
+              Points
+            </button>
+            <button
+              type="button"
+              className="btn active-match-result-btn"
+              disabled={!decisionEnabled}
+              onClick={() => handleMatchSubmit(false, 'Decision')}
+            >
+              Decision
+            </button>
+          </div>
+        </article>
+      </section>
 
       <audio id="start-gong" className="sound" ref={startGongRef}>
         <source src="/start_gong.mp3" />
