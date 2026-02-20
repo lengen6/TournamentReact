@@ -66,3 +66,40 @@ body {
   position: absolute;
   top: -100000em;
 }
+
+.site-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.site-header {
+  background-color: #ffffff;
+}
+
+.site-content {
+  flex: 1;
+}
+
+.site-nav-link {
+  color: #495057;
+  border-radius: 999px;
+  transition: background-color 150ms ease-in-out, color 150ms ease-in-out;
+}
+
+.site-nav-link:hover,
+.site-nav-link:focus {
+  color: #212529;
+  background-color: #e9ecef;
+}
+
+.site-nav-link-active,
+.site-nav-link-active:hover,
+.site-nav-link-active:focus {
+  color: #ffffff;
+  background-color: #212529;
+}
+
+.site-footer {
+  background-color: #f1f3f5;
+}

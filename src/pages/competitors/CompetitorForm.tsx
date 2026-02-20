@@ -12,7 +12,7 @@ type CompetitorFormProps = {
   onSubmit: (values: CompetitorFormValues) => void;
 };
 
-const validNamePattern = /^[a-zA-Z/'-]+$/;
+const validNamePattern = /^[a-zA-Z/' -]+$/;
 const maxNameLength = 25;
 
 export function CompetitorForm({
@@ -30,8 +30,8 @@ export function CompetitorForm({
     const trimmedFirstName = firstName.trim();
     const trimmedLastName = lastName.trim();
 
-    if (!trimmedFirstName || !trimmedLastName) {
-      setErrorMessage("First and Last Name are required.");
+    if (!trimmedFirstName) {
+      setErrorMessage("First Name is required.");
       return;
     }
 
@@ -45,10 +45,10 @@ export function CompetitorForm({
 
     if (
       !validNamePattern.test(trimmedFirstName) ||
-      !validNamePattern.test(trimmedLastName)
+      (trimmedLastName.length > 0 && !validNamePattern.test(trimmedLastName))
     ) {
       setErrorMessage(
-        "Names can only include letters, apostrophes, slashes, and hyphens.",
+        "Names can only include letters, spaces, apostrophes, slashes, and hyphens.",
       );
       return;
     }
@@ -76,12 +76,12 @@ export function CompetitorForm({
           onChange={(event) => setFirstName(event.target.value)}
           required
           maxLength={maxNameLength}
-          pattern="[a-zA-Z/'-]+"
+          pattern="[a-zA-Z/' -]+"
         />
       </div>
       <div className="mb-3">
         <label htmlFor="lastName" className="form-label">
-          Last Name
+          Last Name (Optional)
         </label>
         <input
           id="lastName"
@@ -89,9 +89,8 @@ export function CompetitorForm({
           className="form-control"
           value={lastName}
           onChange={(event) => setLastName(event.target.value)}
-          required
           maxLength={maxNameLength}
-          pattern="[a-zA-Z/'-]+"
+          pattern="[a-zA-Z/' -]+"
         />
       </div>
       <div className="form-group">
