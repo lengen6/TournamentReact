@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link } from "react-router-dom";
 
 export function HomePage() {
   return (
@@ -6,7 +6,9 @@ export function HomePage() {
       <section className="home-hero home-outline">
         <div className="container">
           <h1 className="display-3 text-center">铁人比赛</h1>
-          <h2 className="text-center">Welcome to the Tie Ren (Iron Man) Tourament</h2>
+          <h2 className="text-center">
+            Welcome to the Tie Ren (Iron Man) Tourament
+          </h2>
           <img
             className="img-fluid rounded-circle home-card-image home-big-pic mt-4"
             src="/IronMan.png"
@@ -31,8 +33,9 @@ export function HomePage() {
               <div className="p-5">
                 <h2 className="display-4">Tourney Organization Made Easy</h2>
                 <p>
-                  Tie Ren Tournament is a web based application that allows grappling
-                  enthusiasts to run tournaments at a moment&apos;s notice from any device.
+                  Tie Ren Tournament is a web based application that allows
+                  grappling enthusiasts to run tournaments at a moment&apos;s
+                  notice from any device.
                 </p>
               </div>
             </div>
@@ -58,9 +61,12 @@ export function HomePage() {
                   Matchmaking, Scoring, Timing, and Results in One Place
                 </h2>
                 <p>
-                  Tie Ren handles everything in one smooth integrated experience. Enter a
-                  roster, choose single or double elimination, and click start. It handles
-                  the rest.
+                  Tie Ren handles everything in one smooth integrated
+                  experience. Enter a roster, choose single or double
+                  elimination, and click start. It handles the rest.
+                </p>
+                <p className="mb-0">
+                  <Link to="/about">Learn how the bracket logic works.</Link>
                 </p>
               </div>
             </div>
@@ -82,12 +88,14 @@ export function HomePage() {
             </div>
             <div className="col-lg-6 order-lg-1">
               <div className="p-5">
-                <h2 className="display-4">Knowledge is Power Privacy is King</h2>
+                <h2 className="display-4">
+                  Knowledge is Power Privacy is King
+                </h2>
                 <p>
-                  View results by competitor rankings or by match. Match results are
-                  searchable by various metrics. We don&apos;t collect any personal
-                  information beyond a login. Simply sign up, sign in, and let the
-                  grappling commence.
+                  View results by competitor rankings or by match. Match results
+                  are searchable by various metrics. We don&apos;t collect any
+                  personal information, create your roster and start grappling.
+                  That's it.
                 </p>
               </div>
             </div>
@@ -101,5 +109,5 @@ export function HomePage() {
         </h1>
       </div>
     </main>
-  )
+  );
 }

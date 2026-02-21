@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { SiteLayout } from './components/SiteLayout'
+import { AboutPage } from './pages/AboutPage'
 import { CompetitorCountErrorPage } from './pages/CompetitorCountErrorPage'
 import { EventsHistoryPage } from './pages/EventsHistoryPage'
 import { CompetitorsCreatePage } from './pages/competitors/CompetitorsCreatePage'
@@ -19,6 +20,7 @@ function App() {
     <Routes>
       <Route element={<SiteLayout />}>
         <Route index element={<HomePage />} />
+        <Route path="about" element={<AboutPage />} />
         <Route path="competitors" element={<CompetitorsIndexPage />} />
         <Route path="competitors/create" element={<CompetitorsCreatePage />} />
         <Route path="competitors/:id/edit" element={<CompetitorsEditPage />} />
