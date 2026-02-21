@@ -48,27 +48,43 @@ export function SiteLayout() {
       <header className="site-header border-bottom">
         <nav className="navbar navbar-expand-lg navbar-light py-3">
           <div className="container d-flex flex-wrap align-items-center gap-3">
+            <button
+              type="button"
+              className="btn site-theme-toggle"
+              onClick={toggleTheme}
+              aria-pressed={theme === 'dark'}
+              aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+            >
+              {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+            </button>
             <Link className="navbar-brand mb-0 fw-semibold" to="/" onClick={closeMenu}>
               Tie Ren Tournament
             </Link>
-            <button
-              type="button"
-              className="navbar-toggler ms-auto"
-              aria-label="Toggle navigation"
-              aria-controls="site-navbar-navigation"
-              aria-expanded={isMenuOpen}
-              onClick={toggleMenu}
-            >
-              <span className="navbar-toggler-icon" />
-            </button>
+            <div className="site-header-actions d-flex align-items-center gap-2 ms-auto order-lg-3">
+              <button
+                type="button"
+                className="navbar-toggler"
+                aria-label="Toggle navigation"
+                aria-controls="site-navbar-navigation"
+                aria-expanded={isMenuOpen}
+                onClick={toggleMenu}
+              >
+                <span className="navbar-toggler-icon" />
+              </button>
+            </div>
             <div
               id="site-navbar-navigation"
-              className={`collapse navbar-collapse site-nav-collapse${isMenuOpen ? ' show' : ''}`}
+              className={`collapse navbar-collapse site-nav-collapse order-3 order-lg-2${isMenuOpen ? ' show' : ''}`}
             >
-              <ul className="navbar-nav site-nav-list ms-auto mt-3 mt-lg-0 flex-column flex-lg-row">
+              <ul className="navbar-nav site-nav-list mt-3 mt-lg-0 ms-lg-auto flex-column flex-lg-row">
                 <li className="nav-item">
                   <NavLink to="/" end className={buildNavLinkClassName} onClick={closeMenu}>
                     Home
+                  </NavLink>
+                </li>
+                <li className="nav-item">
+                  <NavLink to="/about" className={buildNavLinkClassName} onClick={closeMenu}>
+                    About
                   </NavLink>
                 </li>
                 <li className="nav-item">
@@ -113,15 +129,6 @@ export function SiteLayout() {
                   </NavLink>
                 </li>
               </ul>
-              <button
-                type="button"
-                className="btn site-theme-toggle ms-lg-3 mt-3 mt-lg-0"
-                onClick={toggleTheme}
-                aria-pressed={theme === 'dark'}
-                aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-              >
-                {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-              </button>
             </div>
           </div>
         </nav>

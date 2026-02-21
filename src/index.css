@@ -842,6 +842,10 @@ hr {
   border-color: var(--theme-toggle-border);
 }
 
+.site-header-actions .site-theme-toggle {
+  white-space: nowrap;
+}
+
 .site-footer {
   background-color: var(--footer-bg);
   border-top: 1px solid var(--border-soft) !important;
@@ -934,10 +938,6 @@ hr {
   .site-nav-link {
     width: 100%;
     padding-inline: 0.78rem;
-  }
-
-  .site-theme-toggle {
-    width: 100%;
   }
 
   .home-outline .p-5,

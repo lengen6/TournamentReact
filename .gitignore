@@ -1,5 +1,7 @@
 # Ignore generated build assets
 dist/assets/
+test-dist/
+coverage/
 
 # Ignore node modules
 node_modules/
