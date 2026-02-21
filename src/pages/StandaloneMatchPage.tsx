@@ -6,6 +6,10 @@ type ClockState = {
 }
 
 const initialClock: ClockState = { minutes: 5, seconds: 0 }
+const startGongUrl = `${import.meta.env.BASE_URL}start_gong.mp3`
+const highBeepUrl = `${import.meta.env.BASE_URL}high_beep.mp3`
+const endGongUrl = `${import.meta.env.BASE_URL}end_gong.mp3`
+const lowBeepUrl = `${import.meta.env.BASE_URL}low_beep.mp3`
 
 const playAudio = (audioElement: HTMLAudioElement | null) => {
   if (!audioElement) {
@@ -366,16 +370,16 @@ export function StandaloneMatchPage() {
       ) : null}
 
       <audio id="standalone-start-gong" className="sound" ref={startGongRef}>
-        <source src="/start_gong.mp3" />
+        <source src={startGongUrl} />
       </audio>
       <audio id="standalone-high-beep" className="sound" ref={highBeepRef}>
-        <source src="/high_beep.mp3" />
+        <source src={highBeepUrl} />
       </audio>
       <audio id="standalone-end-gong" className="sound" ref={endGongRef}>
-        <source src="/end_gong.mp3" />
+        <source src={endGongUrl} />
       </audio>
       <audio id="standalone-low-beep" className="sound" ref={lowBeepRef}>
-        <source src="/low_beep.mp3" />
+        <source src={lowBeepUrl} />
       </audio>
     </main>
   )

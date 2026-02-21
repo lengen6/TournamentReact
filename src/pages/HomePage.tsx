@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 
+const ironManImageUrl = `${import.meta.env.BASE_URL}IronMan.png`;
+
 export function HomePage() {
   return (
     <main>
@@ -11,7 +13,7 @@ export function HomePage() {
           </h2>
           <img
             className="img-fluid rounded-circle home-card-image home-big-pic mt-4"
-            src="/IronMan.png"
+            src={ironManImageUrl}
             alt="Iron Water Color"
           />
         </div>
