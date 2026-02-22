@@ -1,7 +1,7 @@
 export function AboutPage() {
   return (
     <main className="container py-4 page-about">
-      <h1 className="mb-3">About Tie Ren Tournament</h1>
+      <h1 className="mb-3">About OpenBracket</h1>
       <p className="mb-4">
         This page explains the default bracket flow in clear, step-by-step terms.
       </p>
