@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-const openBracketImageUrl = `${import.meta.env.BASE_URL}assets/openbracket_logo_transparent.png`;
+const openBracketImageUrl = `${import.meta.env.BASE_URL}assets/openbracket_logo_teal.png`;
 
 type HomeFeatureCard = {
   title: string;
@@ -15,7 +15,7 @@ const homeFeatureCards: HomeFeatureCard[] = [
   {
     title: "Tourney Organization Made Easy",
     description:
-      "OpenBracket is a web based application that allows grappling enthusiasts to run tournaments at a moment's notice from any device.",
+      "OPEN[bracket] is a web based application that allows grappling enthusiasts to run tournaments at a moment's notice from any device.",
     imageUrl:
       "https://images.unsplash.com/photo-1624938518616-3be0add427d1?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80",
     imageAlt: "Black and White Jiu Jitsu Photo",
@@ -23,7 +23,7 @@ const homeFeatureCards: HomeFeatureCard[] = [
   {
     title: "Matchmaking, Scoring, Timing, and Results All in One Place",
     description:
-      "OpenBracket handles everything in one smooth integrated experience. Enter a roster, choose single or double elimination, and click start. It handles the rest.",
+      "OPEN[bracket] handles everything in one smooth integrated experience. Enter a roster, choose single or double elimination, and click start. It handles the rest.",
     imageUrl:
       "https://images.unsplash.com/photo-1564415315949-7a0c4c73aab4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
     imageAlt: "Inverted Armbar",
@@ -49,8 +49,8 @@ export function HomePage() {
             <p className="home-kicker mb-2">
               Tournament operations, modernized
             </p>
-            <h1 className="home-title mb-3">OpenBracket</h1>
-            <h2 className="home-subtitle mb-4">Welcome to OpenBracket</h2>
+            <h1 className="home-title mb-3">OPEN[bracket]</h1>
+            <h2 className="home-subtitle mb-4">Welcome to OPEN[bracket]</h2>
             <div className="home-hero-actions">
               <Link
                 className="btn btn-primary home-btn-primary"

@@ -58,7 +58,7 @@ export function SiteLayout() {
               {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
             </button>
             <Link className="navbar-brand mb-0 fw-semibold" to="/" onClick={closeMenu}>
-              OpenBracket
+              OPEN[bracket]
             </Link>
             <div className="site-header-actions d-flex align-items-center gap-2 ms-auto order-lg-3">
               <button
@@ -140,7 +140,7 @@ export function SiteLayout() {
 
       <footer className="site-footer border-top">
         <div className="container py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <span>OpenBracket</span>
+          <span>OPEN[bracket]</span>
           <small className="text-muted">Built for live event operations.</small>
         </div>
       </footer>
