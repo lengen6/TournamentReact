@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-const openBracketImageUrl = `${import.meta.env.BASE_URL}assets/openbracket_circular_badge.png`;
+const openBracketImageUrl = `${import.meta.env.BASE_URL}assets/openbracket_logo_transparent.png`;
 
 type HomeFeatureCard = {
   title: string;
