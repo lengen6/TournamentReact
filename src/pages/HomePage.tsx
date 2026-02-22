@@ -21,7 +21,7 @@ const homeFeatureCards: HomeFeatureCard[] = [
     imageAlt: "Black and White Jiu Jitsu Photo",
   },
   {
-    title: "Matchmaking, Scoring, Timing, and Results in One Place",
+    title: "Matchmaking, Scoring, Timing, and Results All in One Place",
     description:
       "OpenBracket handles everything in one smooth integrated experience. Enter a roster, choose single or double elimination, and click start. It handles the rest.",
     imageUrl:
@@ -46,21 +46,33 @@ export function HomePage() {
       <section className="home-shell home-hero-panel">
         <div className="container home-hero-grid">
           <div className="home-hero-copy">
-            <p className="home-kicker mb-2">Tournament operations, modernized</p>
+            <p className="home-kicker mb-2">
+              Tournament operations, modernized
+            </p>
             <h1 className="home-title mb-3">OpenBracket</h1>
             <h2 className="home-subtitle mb-4">Welcome to OpenBracket</h2>
             <div className="home-hero-actions">
-              <Link className="btn btn-primary home-btn-primary" to="/competitors">
+              <Link
+                className="btn btn-primary home-btn-primary"
+                to="/competitors"
+              >
                 Setup your event today!
               </Link>
-              <Link className="btn btn-outline-primary home-btn-secondary" to="/about">
+              <Link
+                className="btn btn-outline-primary home-btn-secondary"
+                to="/about"
+              >
                 Learn how the bracket logic works
               </Link>
             </div>
           </div>
           <div className="home-logo-stage" aria-hidden="true">
             <div className="home-logo-ring">
-              <img className="home-logo-mark" src={openBracketImageUrl} alt="" />
+              <img
+                className="home-logo-mark"
+                src={openBracketImageUrl}
+                alt=""
+              />
             </div>
             <div className="home-logo-tag">Single and Double Elimination</div>
             <div className="home-logo-tag">Matchmaking, Timing, Results</div>
@@ -101,7 +113,10 @@ export function HomePage() {
           <p className="home-cta-text mb-0">
             Setup your event today and start your bracket in minutes.
           </p>
-          <Link className="btn btn-primary home-btn-primary mt-3" to="/competitors">
+          <Link
+            className="btn btn-primary home-btn-primary mt-3"
+            to="/competitors"
+          >
             Setup your event today!
           </Link>
         </div>
