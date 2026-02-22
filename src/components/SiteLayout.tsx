@@ -5,7 +5,7 @@ const buildNavLinkClassName = ({ isActive }: { isActive: boolean }) =>
   `nav-link px-3 site-nav-link${isActive ? ' site-nav-link-active' : ''}`
 
 type ThemeMode = 'light' | 'dark'
-const themeStorageKey = 'tie-ren-theme'
+const themeStorageKey = 'openbracket-theme'
 
 const getPreferredTheme = (): ThemeMode => {
   if (typeof window === 'undefined') {
@@ -58,7 +58,7 @@ export function SiteLayout() {
               {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
             </button>
             <Link className="navbar-brand mb-0 fw-semibold" to="/" onClick={closeMenu}>
-              Tie Ren Tournament
+              OpenBracket
             </Link>
             <div className="site-header-actions d-flex align-items-center gap-2 ms-auto order-lg-3">
               <button
@@ -140,7 +140,7 @@ export function SiteLayout() {
 
       <footer className="site-footer border-top">
         <div className="container py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <span>Tie Ren Tournament</span>
+          <span>OpenBracket</span>
           <small className="text-muted">Built for live event operations.</small>
         </div>
       </footer>

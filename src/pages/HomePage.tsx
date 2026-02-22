@@ -1,20 +1,20 @@
 import { Link } from "react-router-dom";
 
-const ironManImageUrl = `${import.meta.env.BASE_URL}IronMan.png`;
+const openBracketImageUrl = `${import.meta.env.BASE_URL}assets/openbracket_circular_badge.png`;
 
 export function HomePage() {
   return (
     <main>
       <section className="home-hero home-outline">
         <div className="container">
-          <h1 className="display-3 text-center">铁人比赛</h1>
+          <h1 className="display-3 text-center">OpenBracket</h1>
           <h2 className="text-center">
-            Welcome to the Tie Ren (Iron Man) Tourament
+            Welcome to OpenBracket
           </h2>
           <img
             className="img-fluid rounded-circle home-card-image home-big-pic mt-4"
-            src={ironManImageUrl}
-            alt="Iron Water Color"
+            src={openBracketImageUrl}
+            alt="OpenBracket logo"
           />
         </div>
       </section>
@@ -35,7 +35,7 @@ export function HomePage() {
               <div className="p-5">
                 <h2 className="display-4">Tourney Organization Made Easy</h2>
                 <p>
-                  Tie Ren Tournament is a web based application that allows
+                  OpenBracket is a web based application that allows
                   grappling enthusiasts to run tournaments at a moment&apos;s
                   notice from any device.
                 </p>
@@ -63,7 +63,7 @@ export function HomePage() {
                   Matchmaking, Scoring, Timing, and Results in One Place
                 </h2>
                 <p>
-                  Tie Ren handles everything in one smooth integrated
+                  OpenBracket handles everything in one smooth integrated
                   experience. Enter a roster, choose single or double
                   elimination, and click start. It handles the rest.
                 </p>
