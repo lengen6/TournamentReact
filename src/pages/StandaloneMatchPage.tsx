@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-
-type ClockState = {
-  minutes: number
-  seconds: number
-}
+import {
+  type ClockState,
+  computeStandaloneTimerTick,
+  isClockEmpty,
+  type TimerPhase,
+} from './standaloneTimer'
 
 const initialClock: ClockState = { minutes: 5, seconds: 0 }
+const initialRestClock: ClockState = { minutes: 1, seconds: 0 }
 const startGongUrl = `${import.meta.env.BASE_URL}start_gong.mp3`
 const highBeepUrl = `${import.meta.env.BASE_URL}high_beep.mp3`
 const endGongUrl = `${import.meta.env.BASE_URL}end_gong.mp3`
@@ -35,12 +37,16 @@ export function StandaloneMatchPage() {
   const lowBeepRef = useRef<HTMLAudioElement>(null)
 
   const [clock, setClock] = useState<ClockState>(initialClock)
-  const [startClock, setStartClock] = useState<ClockState | null>(null)
+  const [matchStartClock, setMatchStartClock] = useState<ClockState | null>(null)
+  const [roundDuration, setRoundDuration] = useState<ClockState>(initialClock)
+  const [restDuration, setRestDuration] = useState<ClockState>(initialRestClock)
   const [redScore, setRedScore] = useState(0)
   const [blueScore, setBlueScore] = useState(0)
   const [hasStarted, setHasStarted] = useState(false)
   const [isRunning, setIsRunning] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
+  const [isRepeatEnabled, setIsRepeatEnabled] = useState(false)
+  const [phase, setPhase] = useState<TimerPhase>('round')
   const [resultMessage, setResultMessage] = useState<string | null>(null)
 
   useEffect(() => {
@@ -50,34 +56,43 @@ export function StandaloneMatchPage() {
 
     const timer = window.setInterval(() => {
       setClock((previousClock) => {
-        if (previousClock.minutes === 0 && previousClock.seconds === 0) {
-          return previousClock
-        }
+        const tick = computeStandaloneTimerTick(previousClock, {
+          phase,
+          isRepeatEnabled,
+          roundDuration,
+          restDuration,
+        })
 
-        const nextClock =
-          previousClock.seconds > 0
-            ? { minutes: previousClock.minutes, seconds: previousClock.seconds - 1 }
-            : { minutes: Math.max(0, previousClock.minutes - 1), seconds: 59 }
-
-        if (nextClock.minutes === 0 && nextClock.seconds === 30) {
+        if (tick.playHighBeep) {
           playAudio(highBeepRef.current)
           window.setTimeout(() => playAudio(highBeepRef.current), 500)
         }
 
-        if (nextClock.minutes === 0 && nextClock.seconds === 0) {
+        if (tick.playEndGong) {
           playAudio(endGongRef.current)
+        }
+
+        if (tick.playStartGong) {
+          playAudio(startGongRef.current)
+        }
+
+        if (!tick.shouldKeepRunning) {
           setIsRunning(false)
           setIsPaused(false)
         }
 
-        return nextClock
+        if (tick.nextPhase !== phase) {
+          setPhase(tick.nextPhase)
+        }
+
+        return tick.nextClock
       })
     }, 1000)
 
     return () => window.clearInterval(timer)
-  }, [isPaused, isRunning])
+  }, [isPaused, isRepeatEnabled, isRunning, phase, restDuration, roundDuration])
 
-  const timeExpired = clock.minutes === 0 && clock.seconds === 0
+  const timeExpired = !isRepeatEnabled && isClockEmpty(clock)
   const redPointsEnabled = timeExpired && redScore > blueScore
   const bluePointsEnabled = timeExpired && blueScore > redScore
   const decisionEnabled = timeExpired && redScore === blueScore
@@ -85,26 +100,72 @@ export function StandaloneMatchPage() {
   const matchStatus = timeExpired
     ? 'Time Expired'
     : isRunning && !isPaused
-      ? 'Live'
+      ? phase === 'round'
+        ? 'Live'
+        : 'Rest'
       : isPaused
-        ? 'Paused'
+        ? phase === 'round'
+          ? 'Paused'
+          : 'Rest Paused'
         : hasStarted
-          ? 'Awaiting Result'
+          ? isRepeatEnabled
+            ? 'Stopped'
+            : 'Awaiting Result'
           : 'Ready'
   const matchStatusClassName = timeExpired
     ? 'active-match-state-expired'
     : isRunning && !isPaused
-      ? 'active-match-state-live'
+      ? phase === 'round'
+        ? 'active-match-state-live'
+        : 'active-match-state-rest'
       : isPaused
         ? 'active-match-state-paused'
         : 'active-match-state-ready'
 
+  const handleRoundMinutesChange = (value: number) => {
+    const minutes = clampTimeValue(value)
+    setRoundDuration((previousClock) => ({ ...previousClock, minutes }))
+
+    if (phase === 'round' || !hasStarted) {
+      setClock((previousClock) => ({ ...previousClock, minutes }))
+    }
+  }
+
+  const handleRoundSecondsChange = (value: number) => {
+    const seconds = clampTimeValue(value)
+    setRoundDuration((previousClock) => ({ ...previousClock, seconds }))
+
+    if (phase === 'round' || !hasStarted) {
+      setClock((previousClock) => ({ ...previousClock, seconds }))
+    }
+  }
+
+  const handleRestMinutesChange = (value: number) => {
+    const minutes = clampTimeValue(value)
+    setRestDuration((previousClock) => ({ ...previousClock, minutes }))
+
+    if (phase === 'rest') {
+      setClock((previousClock) => ({ ...previousClock, minutes }))
+    }
+  }
+
+  const handleRestSecondsChange = (value: number) => {
+    const seconds = clampTimeValue(value)
+    setRestDuration((previousClock) => ({ ...previousClock, seconds }))
+
+    if (phase === 'rest') {
+      setClock((previousClock) => ({ ...previousClock, seconds }))
+    }
+  }
+
   const handleTimerStart = () => {
-    if (hasStarted) {
+    if (hasStarted || isClockEmpty(clock)) {
       return
     }
 
-    setStartClock(clock)
+    setRoundDuration(clock)
+    setMatchStartClock(clock)
+    setPhase('round')
     setHasStarted(true)
     setIsPaused(false)
     setIsRunning(true)
@@ -113,7 +174,9 @@ export function StandaloneMatchPage() {
 
   const handleTimerReset = () => {
     setClock({ minutes: 0, seconds: 0 })
-    setStartClock(null)
+    setMatchStartClock(null)
+    setRoundDuration({ minutes: 0, seconds: 0 })
+    setPhase('round')
     setRedScore(0)
     setBlueScore(0)
     setHasStarted(false)
@@ -143,7 +206,7 @@ export function StandaloneMatchPage() {
 
   const handleResultSubmit = (redWins: boolean, victoryMethod: string) => {
     const winnerLabel = redWins ? 'Red Corner' : 'Blue Corner'
-    const matchStart = startClock ?? clock
+    const matchStart = matchStartClock ?? clock
     setResultMessage(
       `${winnerLabel} wins by ${victoryMethod}. Start ${formatTime(matchStart)} End ${formatTime(clock)}`,
     )
@@ -188,7 +251,9 @@ export function StandaloneMatchPage() {
         </article>
 
         <article className="active-match-clock-card">
-          <p className="active-match-clock-label mb-2">Round Clock</p>
+          <p className="active-match-clock-label mb-2">
+            {phase === 'round' ? 'Round Clock' : 'Rest Clock'}
+          </p>
           <div className="active-match-time-inputs">
             <label htmlFor="standalone-minute" className="active-match-time-field-group">
               <span>Minutes</span>
@@ -200,10 +265,9 @@ export function StandaloneMatchPage() {
                 value={clock.minutes}
                 className="form-control text-center active-match-time-field"
                 onChange={(event) =>
-                  setClock((previousClock) => ({
-                    ...previousClock,
-                    minutes: clampTimeValue(Number(event.target.value)),
-                  }))
+                  phase === 'round'
+                    ? handleRoundMinutesChange(Number(event.target.value))
+                    : handleRestMinutesChange(Number(event.target.value))
                 }
               />
             </label>
@@ -218,14 +282,64 @@ export function StandaloneMatchPage() {
                 value={clock.seconds}
                 className="form-control text-center active-match-time-field"
                 onChange={(event) =>
-                  setClock((previousClock) => ({
-                    ...previousClock,
-                    seconds: clampTimeValue(Number(event.target.value)),
-                  }))
+                  phase === 'round'
+                    ? handleRoundSecondsChange(Number(event.target.value))
+                    : handleRestSecondsChange(Number(event.target.value))
                 }
               />
             </label>
           </div>
+
+          <div className="form-check active-match-repeat-toggle">
+            <input
+              id="standalone-repeat"
+              type="checkbox"
+              className="form-check-input"
+              checked={isRepeatEnabled}
+              disabled={hasStarted}
+              onChange={(event) => setIsRepeatEnabled(event.target.checked)}
+            />
+            <label className="form-check-label" htmlFor="standalone-repeat">
+              Repeat rounds automatically
+            </label>
+          </div>
+
+          {isRepeatEnabled ? (
+            <div className="active-match-rest-settings">
+              <p className="active-match-clock-label mb-2">Rest Between Rounds</p>
+              <div className="active-match-time-inputs">
+                <label htmlFor="standalone-rest-minute" className="active-match-time-field-group">
+                  <span>Minutes</span>
+                  <input
+                    id="standalone-rest-minute"
+                    type="number"
+                    max={60}
+                    min={0}
+                    value={restDuration.minutes}
+                    className="form-control text-center active-match-time-field"
+                    onChange={(event) =>
+                      handleRestMinutesChange(Number(event.target.value))
+                    }
+                  />
+                </label>
+                <span className="active-match-time-separator">:</span>
+                <label htmlFor="standalone-rest-second" className="active-match-time-field-group">
+                  <span>Seconds</span>
+                  <input
+                    id="standalone-rest-second"
+                    type="number"
+                    max={60}
+                    min={0}
+                    value={restDuration.seconds}
+                    className="form-control text-center active-match-time-field"
+                    onChange={(event) =>
+                      handleRestSecondsChange(Number(event.target.value))
+                    }
+                  />
+                </label>
+              </div>
+            </div>
+          ) : null}
 
           <div className="active-match-timer-controls match-controls">
             <button
@@ -233,7 +347,7 @@ export function StandaloneMatchPage() {
               type="button"
               className="btn btn-outline-primary"
               onClick={handleTimerStart}
-              disabled={hasStarted}
+              disabled={hasStarted || isClockEmpty(clock)}
             >
               Start
             </button>

@@ -9,5 +9,9 @@
     "verbatimModuleSyntax": false,
     "types": ["node"]
   },
-  "include": ["src/models/**/*.ts", "src/store/useTournamentStore.ts"]
+  "include": [
+    "src/models/**/*.ts",
+    "src/store/useTournamentStore.ts",
+    "src/pages/standaloneTimer.ts"
+  ]
 }
