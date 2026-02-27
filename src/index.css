@@ -565,6 +565,11 @@ main > *:nth-child(4) {
   background: linear-gradient(145deg, #fcd34d 0%, #f59e0b 100%);
 }
 
+.active-match-state-rest {
+  color: #082f49;
+  background: linear-gradient(145deg, #bae6fd 0%, #7dd3fc 100%);
+}
+
 .active-match-state-ready,
 .active-match-state-expired {
   color: #f8fafc;
@@ -691,6 +696,31 @@ main > *:nth-child(4) {
   font-family: var(--font-display);
   font-size: clamp(1.22rem, 2.4vw, 1.75rem);
   line-height: 1.2;
+}
+
+.active-match-repeat-toggle {
+  margin-top: 0.82rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.52rem;
+}
+
+.active-match-repeat-toggle .form-check-input {
+  margin-top: 0.08rem;
+}
+
+.active-match-repeat-toggle .form-check-label {
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #334155;
+  font-weight: 700;
+}
+
+.active-match-rest-settings {
+  margin-top: 0.82rem;
+  padding-top: 0.72rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.46);
 }
 
 .active-match-timer-controls {
