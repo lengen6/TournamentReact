@@ -15,10 +15,10 @@ const homeFeatureCards: HomeFeatureCard[] = [
   {
     title: "Tourney Organization Made Easy",
     description:
-      "OPEN[bracket] is a web based application that allows grappling enthusiasts to run tournaments at a moment's notice from any device.",
+      "OPEN[bracket] is a web based application that allows martial arts enthusiasts to run tournaments at a moment's notice from any device.",
     imageUrl:
-      "https://images.unsplash.com/photo-1624938518616-3be0add427d1?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80",
-    imageAlt: "Black and White Jiu Jitsu Photo",
+      "https://unsplash.com/photos/1jaXXVuPRDc/download?force=true&w=1470",
+    imageAlt: "Grayscale Muay Thai photo",
   },
   {
     title: "Matchmaking, Scoring, Timing, and Results All in One Place",
@@ -33,10 +33,20 @@ const homeFeatureCards: HomeFeatureCard[] = [
   {
     title: "Knowledge is Power Privacy is King",
     description:
-      "View results by competitor rankings or by match. Match results are searchable by various metrics. We don't collect any personal information, create your roster and start grappling. That's it.",
+      "View results by competitor rankings or by match. Match results are searchable by various metrics. We don't collect any personal information, create your roster and start competing. That's it.",
+    imageUrl:
+      "https://unsplash.com/photos/2tZL1FnsC48/download?force=true&w=1469",
+    imageAlt: "Muay Thai Sparring Photo",
+  },
+  {
+    title: "Adjustable Standalone Timer",
+    description:
+      "Need only the clock and score controls? Run the standalone timer to manage match length, rest rounds, points, and outcomes without creating a full event in OPEN[bracket]. Perfect for open mats and practices.",
     imageUrl:
       "https://images.unsplash.com/photo-1611711605692-acb25d5d8399?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1469&q=80",
     imageAlt: "Another Black and White Jiu Jitsu Photo",
+    ctaLabel: "Open the standalone timer.",
+    ctaTo: "/standalone-match",
   },
 ];
 
@@ -46,11 +56,10 @@ export function HomePage() {
       <section className="home-shell home-hero-panel">
         <div className="container home-hero-grid">
           <div className="home-hero-copy">
-            <p className="home-kicker mb-2">
+            <p className="home-kicker mb-3">
               Tournament operations, modernized
             </p>
-            <h1 className="home-title mb-3">OPEN[bracket]</h1>
-            <h2 className="home-subtitle mb-4">Welcome to OPEN[bracket]</h2>
+            <h1 className="home-title mb-4">OPEN[bracket]</h1>
             <div className="home-hero-actions">
               <Link
                 className="btn btn-primary home-btn-primary"
