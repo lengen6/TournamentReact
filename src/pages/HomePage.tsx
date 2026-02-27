@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
 
 const openBracketImageUrl = `${import.meta.env.BASE_URL}assets/openbracket_logo_teal.png`;
+const card1ImageUrl = `${import.meta.env.BASE_URL}assets/card1.jpg`;
+const card2ImageUrl = `${import.meta.env.BASE_URL}assets/card2.png`;
+const card3ImageUrl = `${import.meta.env.BASE_URL}assets/card3.jpg`;
+const card4ImageUrl = `${import.meta.env.BASE_URL}assets/card4.png`;
 
 type HomeFeatureCard = {
   title: string;
@@ -16,16 +20,14 @@ const homeFeatureCards: HomeFeatureCard[] = [
     title: "Tourney Organization Made Easy",
     description:
       "OPEN[bracket] is a web based application that allows martial arts enthusiasts to run tournaments at a moment's notice from any device.",
-    imageUrl:
-      "https://unsplash.com/photos/1jaXXVuPRDc/download?force=true&w=1470",
+    imageUrl: card1ImageUrl,
     imageAlt: "Grayscale Muay Thai photo",
   },
   {
     title: "Matchmaking, Scoring, Timing, and Results All in One Place",
     description:
       "OPEN[bracket] handles everything in one smooth integrated experience. Enter a roster, choose single or double elimination, and click start. It handles the rest.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1564415315949-7a0c4c73aab4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
+    imageUrl: card2ImageUrl,
     imageAlt: "Inverted Armbar",
     ctaLabel: "Learn how the bracket logic works.",
     ctaTo: "/about",
@@ -34,16 +36,14 @@ const homeFeatureCards: HomeFeatureCard[] = [
     title: "Knowledge is Power Privacy is King",
     description:
       "View results by competitor rankings or by match. Match results are searchable by various metrics. We don't collect any personal information, create your roster and start competing. That's it.",
-    imageUrl:
-      "https://unsplash.com/photos/2tZL1FnsC48/download?force=true&w=1469",
+    imageUrl: card3ImageUrl,
     imageAlt: "Muay Thai Sparring Photo",
   },
   {
     title: "Adjustable Standalone Timer",
     description:
       "Need only the clock and score controls? Run the standalone timer to manage match length, rest rounds, points, and outcomes without creating a full event in OPEN[bracket]. Perfect for open mats and practices.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1611711605692-acb25d5d8399?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1469&q=80",
+    imageUrl: card4ImageUrl,
     imageAlt: "Another Black and White Jiu Jitsu Photo",
     ctaLabel: "Open the standalone timer.",
     ctaTo: "/standalone-match",
