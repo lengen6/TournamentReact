@@ -5,6 +5,8 @@ import {
   isClockEmpty,
   type TimerPhase,
 } from './standaloneTimer'
+import { useAmbientAudioSession } from '../hooks/useAmbientAudioSession'
+import { useScreenWakeLock } from '../hooks/useScreenWakeLock'
 
 const initialClock: ClockState = { minutes: 5, seconds: 0 }
 const initialRestClock: ClockState = { minutes: 1, seconds: 0 }
@@ -13,11 +15,15 @@ const highBeepUrl = `${import.meta.env.BASE_URL}high_beep.mp3`
 const endGongUrl = `${import.meta.env.BASE_URL}end_gong.mp3`
 const lowBeepUrl = `${import.meta.env.BASE_URL}low_beep.mp3`
 
-const playAudio = (audioElement: HTMLAudioElement | null) => {
+const playAudio = (
+  audioElement: HTMLAudioElement | null,
+  preparePlayback?: () => void,
+) => {
   if (!audioElement) {
     return
   }
 
+  preparePlayback?.()
   audioElement.currentTime = 0
   void audioElement.play().catch(() => {
     // Ignore autoplay errors.
@@ -48,6 +54,8 @@ export function StandaloneMatchPage() {
   const [isRepeatEnabled, setIsRepeatEnabled] = useState(false)
   const [phase, setPhase] = useState<TimerPhase>('round')
   const [resultMessage, setResultMessage] = useState<string | null>(null)
+  const ensureAmbientAudioSession = useAmbientAudioSession()
+  useScreenWakeLock(isRunning && !isPaused)
 
   useEffect(() => {
     if (!isRunning || isPaused) {
@@ -64,16 +72,19 @@ export function StandaloneMatchPage() {
         })
 
         if (tick.playHighBeep) {
-          playAudio(highBeepRef.current)
-          window.setTimeout(() => playAudio(highBeepRef.current), 500)
+          playAudio(highBeepRef.current, ensureAmbientAudioSession)
+          window.setTimeout(
+            () => playAudio(highBeepRef.current, ensureAmbientAudioSession),
+            500,
+          )
         }
 
         if (tick.playEndGong) {
-          playAudio(endGongRef.current)
+          playAudio(endGongRef.current, ensureAmbientAudioSession)
         }
 
         if (tick.playStartGong) {
-          playAudio(startGongRef.current)
+          playAudio(startGongRef.current, ensureAmbientAudioSession)
         }
 
         if (!tick.shouldKeepRunning) {
@@ -90,7 +101,15 @@ export function StandaloneMatchPage() {
     }, 1000)
 
     return () => window.clearInterval(timer)
-  }, [isPaused, isRepeatEnabled, isRunning, phase, restDuration, roundDuration])
+  }, [
+    ensureAmbientAudioSession,
+    isPaused,
+    isRepeatEnabled,
+    isRunning,
+    phase,
+    restDuration,
+    roundDuration,
+  ])
 
   const timeExpired = !isRepeatEnabled && isClockEmpty(clock)
   const redPointsEnabled = timeExpired && redScore > blueScore
@@ -169,7 +188,7 @@ export function StandaloneMatchPage() {
     setHasStarted(true)
     setIsPaused(false)
     setIsRunning(true)
-    playAudio(startGongRef.current)
+    playAudio(startGongRef.current, ensureAmbientAudioSession)
   }
 
   const handleTimerReset = () => {
@@ -190,8 +209,11 @@ export function StandaloneMatchPage() {
       return
     }
 
-    playAudio(lowBeepRef.current)
-    window.setTimeout(() => playAudio(lowBeepRef.current), 500)
+    playAudio(lowBeepRef.current, ensureAmbientAudioSession)
+    window.setTimeout(
+      () => playAudio(lowBeepRef.current, ensureAmbientAudioSession),
+      500,
+    )
     setIsPaused(true)
   }
 
@@ -200,7 +222,7 @@ export function StandaloneMatchPage() {
       return
     }
 
-    playAudio(lowBeepRef.current)
+    playAudio(lowBeepRef.current, ensureAmbientAudioSession)
     setIsPaused(false)
   }
 
@@ -483,16 +505,40 @@ export function StandaloneMatchPage() {
         </p>
       ) : null}
 
-      <audio id="standalone-start-gong" className="sound" ref={startGongRef}>
+      <audio
+        id="standalone-start-gong"
+        className="sound"
+        ref={startGongRef}
+        preload="auto"
+        playsInline
+      >
         <source src={startGongUrl} />
       </audio>
-      <audio id="standalone-high-beep" className="sound" ref={highBeepRef}>
+      <audio
+        id="standalone-high-beep"
+        className="sound"
+        ref={highBeepRef}
+        preload="auto"
+        playsInline
+      >
         <source src={highBeepUrl} />
       </audio>
-      <audio id="standalone-end-gong" className="sound" ref={endGongRef}>
+      <audio
+        id="standalone-end-gong"
+        className="sound"
+        ref={endGongRef}
+        preload="auto"
+        playsInline
+      >
         <source src={endGongUrl} />
       </audio>
-      <audio id="standalone-low-beep" className="sound" ref={lowBeepRef}>
+      <audio
+        id="standalone-low-beep"
+        className="sound"
+        ref={lowBeepRef}
+        preload="auto"
+        playsInline
+      >
         <source src={lowBeepUrl} />
       </audio>
     </main>

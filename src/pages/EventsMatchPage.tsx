@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTournamentStore } from '../store/useTournamentStore'
+import { useAmbientAudioSession } from '../hooks/useAmbientAudioSession'
+import { useScreenWakeLock } from '../hooks/useScreenWakeLock'
 
 type ClockState = {
   minutes: number
@@ -13,11 +15,15 @@ const highBeepUrl = `${import.meta.env.BASE_URL}high_beep.mp3`
 const endGongUrl = `${import.meta.env.BASE_URL}end_gong.mp3`
 const lowBeepUrl = `${import.meta.env.BASE_URL}low_beep.mp3`
 
-const playAudio = (audioElement: HTMLAudioElement | null) => {
+const playAudio = (
+  audioElement: HTMLAudioElement | null,
+  preparePlayback?: () => void,
+) => {
   if (!audioElement) {
     return
   }
 
+  preparePlayback?.()
   audioElement.currentTime = 0
   void audioElement.play().catch(() => {
     // Ignore autoplay errors.
@@ -45,6 +51,8 @@ export function EventsMatchPage() {
   const [hasStarted, setHasStarted] = useState(false)
   const [isRunning, setIsRunning] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
+  const ensureAmbientAudioSession = useAmbientAudioSession()
+  useScreenWakeLock(isRunning && !isPaused)
 
   const redCompetitor = competitors.find(
     (competitor) => competitor.competitorId === activeMatch?.redCompetitorId,
@@ -70,12 +78,15 @@ export function EventsMatchPage() {
             : { minutes: Math.max(0, previousClock.minutes - 1), seconds: 59 }
 
         if (nextClock.minutes === 0 && nextClock.seconds === 30) {
-          playAudio(highBeepRef.current)
-          window.setTimeout(() => playAudio(highBeepRef.current), 500)
+          playAudio(highBeepRef.current, ensureAmbientAudioSession)
+          window.setTimeout(
+            () => playAudio(highBeepRef.current, ensureAmbientAudioSession),
+            500,
+          )
         }
 
         if (nextClock.minutes === 0 && nextClock.seconds === 0) {
-          playAudio(endGongRef.current)
+          playAudio(endGongRef.current, ensureAmbientAudioSession)
           setIsRunning(false)
           setIsPaused(false)
         }
@@ -85,7 +96,7 @@ export function EventsMatchPage() {
     }, 1000)
 
     return () => window.clearInterval(timer)
-  }, [isPaused, isRunning])
+  }, [ensureAmbientAudioSession, isPaused, isRunning])
 
   if (!activeMatch || !redCompetitor || !blueCompetitor) {
     return (
@@ -142,7 +153,7 @@ export function EventsMatchPage() {
     setHasStarted(true)
     setIsPaused(false)
     setIsRunning(true)
-    playAudio(startGongRef.current)
+    playAudio(startGongRef.current, ensureAmbientAudioSession)
   }
 
   const handleTimerReset = () => {
@@ -160,8 +171,11 @@ export function EventsMatchPage() {
       return
     }
 
-    playAudio(lowBeepRef.current)
-    window.setTimeout(() => playAudio(lowBeepRef.current), 500)
+    playAudio(lowBeepRef.current, ensureAmbientAudioSession)
+    window.setTimeout(
+      () => playAudio(lowBeepRef.current, ensureAmbientAudioSession),
+      500,
+    )
     setIsPaused(true)
   }
 
@@ -170,7 +184,7 @@ export function EventsMatchPage() {
       return
     }
 
-    playAudio(lowBeepRef.current)
+    playAudio(lowBeepRef.current, ensureAmbientAudioSession)
     setIsPaused(false)
   }
 
@@ -405,16 +419,16 @@ export function EventsMatchPage() {
         </article>
       </section>
 
-      <audio id="start-gong" className="sound" ref={startGongRef}>
+      <audio id="start-gong" className="sound" ref={startGongRef} preload="auto" playsInline>
         <source src={startGongUrl} />
       </audio>
-      <audio id="high-beep" className="sound" ref={highBeepRef}>
+      <audio id="high-beep" className="sound" ref={highBeepRef} preload="auto" playsInline>
         <source src={highBeepUrl} />
       </audio>
-      <audio id="end-gong" className="sound" ref={endGongRef}>
+      <audio id="end-gong" className="sound" ref={endGongRef} preload="auto" playsInline>
         <source src={endGongUrl} />
       </audio>
-      <audio id="low-beep" className="sound" ref={lowBeepRef}>
+      <audio id="low-beep" className="sound" ref={lowBeepRef} preload="auto" playsInline>
         <source src={lowBeepUrl} />
       </audio>
     </main>
