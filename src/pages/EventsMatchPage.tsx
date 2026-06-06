@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTournamentStore } from '../store/useTournamentStore'
 import { useTimerAudioCue } from '../hooks/useTimerAudioCue'
@@ -23,11 +23,6 @@ export function EventsMatchPage() {
   const activeMatch = useTournamentStore((state) => state.activeMatch)
   const completeActiveMatch = useTournamentStore((state) => state.completeActiveMatch)
   const navigate = useNavigate()
-
-  const startGongRef = useRef<HTMLAudioElement>(null)
-  const highBeepRef = useRef<HTMLAudioElement>(null)
-  const endGongRef = useRef<HTMLAudioElement>(null)
-  const lowBeepRef = useRef<HTMLAudioElement>(null)
 
   const [clock, setClock] = useState<ClockState>(initialClock)
   const [startClock, setStartClock] = useState<ClockState | null>(null)
@@ -63,14 +58,14 @@ export function EventsMatchPage() {
             : { minutes: Math.max(0, previousClock.minutes - 1), seconds: 59 }
 
         if (nextClock.minutes === 0 && nextClock.seconds === 30) {
-          void playTimerAudioCue(highBeepRef.current, {
+          void playTimerAudioCue(highBeepUrl, {
             repeatCount: 2,
             repeatDelayMs: 500,
           })
         }
 
         if (nextClock.minutes === 0 && nextClock.seconds === 0) {
-          void playTimerAudioCue(endGongRef.current)
+          void playTimerAudioCue(endGongUrl)
           setIsRunning(false)
           setIsPaused(false)
         }
@@ -137,7 +132,7 @@ export function EventsMatchPage() {
     setHasStarted(true)
     setIsPaused(false)
     setIsRunning(true)
-    void playTimerAudioCue(startGongRef.current)
+    void playTimerAudioCue(startGongUrl)
   }
 
   const handleTimerReset = () => {
@@ -155,7 +150,7 @@ export function EventsMatchPage() {
       return
     }
 
-    void playTimerAudioCue(lowBeepRef.current, {
+    void playTimerAudioCue(lowBeepUrl, {
       repeatCount: 2,
       repeatDelayMs: 500,
     })
@@ -167,7 +162,7 @@ export function EventsMatchPage() {
       return
     }
 
-    void playTimerAudioCue(lowBeepRef.current)
+    void playTimerAudioCue(lowBeepUrl)
     setIsPaused(false)
   }
 
@@ -402,18 +397,6 @@ export function EventsMatchPage() {
         </article>
       </section>
 
-      <audio id="start-gong" className="sound" ref={startGongRef} preload="auto" playsInline>
-        <source src={startGongUrl} />
-      </audio>
-      <audio id="high-beep" className="sound" ref={highBeepRef} preload="auto" playsInline>
-        <source src={highBeepUrl} />
-      </audio>
-      <audio id="end-gong" className="sound" ref={endGongRef} preload="auto" playsInline>
-        <source src={endGongUrl} />
-      </audio>
-      <audio id="low-beep" className="sound" ref={lowBeepRef} preload="auto" playsInline>
-        <source src={lowBeepUrl} />
-      </audio>
     </main>
   )
 }
