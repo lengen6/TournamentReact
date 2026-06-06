@@ -1,144 +1,142 @@
 const { playTimerAudioCue } = require('../test-dist/hooks/useTimerAudioCue.js')
 
-const installAudioMock = (playFactory = () => jest.fn(() => Promise.resolve())) => {
-  const instances = []
+const setNavigator = (value) => {
+  Object.defineProperty(global, 'navigator', {
+    configurable: true,
+    value,
+  })
+}
 
-  class MockAudio {
-    constructor(src) {
-      this.src = src
-      this.currentTime = 12
-      this.preload = ''
-      this.setAttribute = jest.fn()
-      this.pause = jest.fn()
-      this.load = jest.fn()
-      this.removeAttribute = jest.fn((attributeName) => {
-        if (attributeName === 'src') {
-          this.src = ''
-        }
-      })
-      this.play = playFactory(this)
-      this.listeners = new Map()
-      this.addEventListener = jest.fn((eventName, listener) => {
-        this.listeners.set(eventName, listener)
-      })
-      this.removeEventListener = jest.fn((eventName, listener) => {
-        if (this.listeners.get(eventName) === listener) {
-          this.listeners.delete(eventName)
-        }
-      })
+const createAudioElement = (play = jest.fn(() => Promise.resolve())) => {
+  const listeners = new Map()
 
-      instances.push(this)
-    }
-
-    emit(eventName) {
-      this.listeners.get(eventName)?.()
-    }
+  return {
+    currentTime: 12,
+    play,
+    addEventListener: jest.fn((eventName, listener) => {
+      listeners.set(eventName, listener)
+    }),
+    removeEventListener: jest.fn((eventName, listener) => {
+      if (listeners.get(eventName) === listener) {
+        listeners.delete(eventName)
+      }
+    }),
+    emit: (eventName) => {
+      listeners.get(eventName)?.()
+    },
   }
-
-  global.Audio = MockAudio
-
-  return instances
 }
 
 afterEach(() => {
   jest.useRealTimers()
-  delete global.Audio
+  delete global.navigator
 })
 
-test('creates a fresh audio stream for a timer cue', async () => {
-  const audioInstances = installAudioMock()
+test('plays timer audio when the Audio Session API is unsupported', async () => {
+  setNavigator({})
+  const audioElement = createAudioElement()
 
-  const cuePromise = playTimerAudioCue('/start_gong.mp3')
+  const cuePromise = playTimerAudioCue(audioElement)
 
-  expect(audioInstances).toHaveLength(1)
-  expect(audioInstances[0].src).toBe('/start_gong.mp3')
-  expect(audioInstances[0].preload).toBe('auto')
-  expect(audioInstances[0].setAttribute).toHaveBeenCalledWith('playsinline', '')
-  expect(audioInstances[0].currentTime).toBe(0)
-  expect(audioInstances[0].play).toHaveBeenCalledTimes(1)
+  expect(audioElement.currentTime).toBe(0)
+  expect(audioElement.play).toHaveBeenCalledTimes(1)
 
-  audioInstances[0].emit('ended')
+  audioElement.emit('ended')
   await cuePromise
 })
 
-test('cleans up the audio stream after playback ends', async () => {
-  const audioInstances = installAudioMock()
+test('uses transient solo focus while supported timer audio is playing', async () => {
+  const audioSession = { type: 'ambient' }
+  setNavigator({ audioSession })
+  const audioElement = createAudioElement()
 
-  const cuePromise = playTimerAudioCue('/end_gong.mp3')
-  const audioElement = audioInstances[0]
+  const cuePromise = playTimerAudioCue(audioElement)
+
+  expect(audioSession.type).toBe('transient-solo')
 
   audioElement.emit('ended')
   await cuePromise
 
-  expect(audioElement.removeEventListener).toHaveBeenCalledWith(
-    'ended',
-    expect.any(Function),
-  )
-  expect(audioElement.removeEventListener).toHaveBeenCalledWith(
-    'error',
-    expect.any(Function),
-  )
-  expect(audioElement.pause).toHaveBeenCalledTimes(1)
-  expect(audioElement.removeAttribute).toHaveBeenCalledWith('src')
-  expect(audioElement.load).toHaveBeenCalledTimes(1)
-  expect(audioElement.src).toBe('')
+  expect(audioSession.type).toBe('ambient')
 })
 
-test('cleans up the audio stream when playback fails', async () => {
-  const audioInstances = installAudioMock(() =>
+test('releases audio focus when playback fails', async () => {
+  const audioSession = { type: 'ambient' }
+  setNavigator({ audioSession })
+  const audioElement = createAudioElement(
     jest.fn(() => Promise.reject(new Error('playback blocked'))),
   )
 
-  await playTimerAudioCue('/low_beep.mp3')
+  await playTimerAudioCue(audioElement)
 
-  expect(audioInstances).toHaveLength(1)
-  expect(audioInstances[0].play).toHaveBeenCalledTimes(1)
-  expect(audioInstances[0].pause).toHaveBeenCalledTimes(1)
-  expect(audioInstances[0].removeAttribute).toHaveBeenCalledWith('src')
-  expect(audioInstances[0].load).toHaveBeenCalledTimes(1)
+  expect(audioElement.play).toHaveBeenCalledTimes(1)
+  expect(audioSession.type).toBe('ambient')
 })
 
-test('creates and removes a separate stream for each repeated cue', async () => {
+test('keeps audio focus active until a repeated cue finishes', async () => {
   jest.useFakeTimers()
-  const audioInstances = installAudioMock()
+  const audioSession = { type: 'ambient' }
+  setNavigator({ audioSession })
+  const audioElement = createAudioElement()
 
-  const cuePromise = playTimerAudioCue('/high_beep.mp3', {
+  const cuePromise = playTimerAudioCue(audioElement, {
     repeatCount: 2,
     repeatDelayMs: 500,
   })
 
-  expect(audioInstances).toHaveLength(1)
-  expect(audioInstances[0].play).toHaveBeenCalledTimes(1)
+  expect(audioSession.type).toBe('transient-solo')
+  expect(audioElement.play).toHaveBeenCalledTimes(1)
 
-  audioInstances[0].emit('ended')
+  audioElement.emit('ended')
   await Promise.resolve()
 
-  expect(audioInstances[0].removeAttribute).toHaveBeenCalledWith('src')
-  expect(audioInstances).toHaveLength(1)
+  expect(audioSession.type).toBe('transient-solo')
+  expect(audioElement.play).toHaveBeenCalledTimes(1)
 
   jest.advanceTimersByTime(499)
   await Promise.resolve()
 
-  expect(audioInstances).toHaveLength(1)
+  expect(audioElement.play).toHaveBeenCalledTimes(1)
 
   jest.advanceTimersByTime(1)
   await Promise.resolve()
 
-  expect(audioInstances).toHaveLength(2)
-  expect(audioInstances[1].src).toBe('/high_beep.mp3')
-  expect(audioInstances[1].play).toHaveBeenCalledTimes(1)
+  expect(audioSession.type).toBe('transient-solo')
+  expect(audioElement.play).toHaveBeenCalledTimes(2)
 
-  audioInstances[1].emit('ended')
+  audioElement.emit('ended')
   await cuePromise
 
-  expect(audioInstances[1].removeAttribute).toHaveBeenCalledWith('src')
-  expect(audioInstances[1].load).toHaveBeenCalledTimes(1)
+  expect(audioSession.type).toBe('ambient')
 })
 
-test('does not create audio when no source is provided', async () => {
-  const audioInstances = installAudioMock()
+test('keeps audio focus active until overlapping cues finish', async () => {
+  const audioSession = { type: 'ambient' }
+  setNavigator({ audioSession })
+  const firstAudioElement = createAudioElement()
+  const secondAudioElement = createAudioElement()
+
+  const firstCuePromise = playTimerAudioCue(firstAudioElement)
+  const secondCuePromise = playTimerAudioCue(secondAudioElement)
+
+  expect(audioSession.type).toBe('transient-solo')
+
+  firstAudioElement.emit('ended')
+  await firstCuePromise
+
+  expect(audioSession.type).toBe('transient-solo')
+
+  secondAudioElement.emit('ended')
+  await secondCuePromise
+
+  expect(audioSession.type).toBe('ambient')
+})
+
+test('does not request audio focus when no audio element is provided', async () => {
+  const audioSession = { type: 'ambient' }
+  setNavigator({ audioSession })
 
   await playTimerAudioCue(null)
 
-  expect(audioInstances).toHaveLength(0)
+  expect(audioSession.type).toBe('ambient')
 })
