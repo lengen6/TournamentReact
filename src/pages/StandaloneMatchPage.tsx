@@ -10,9 +10,9 @@ import { useScreenWakeLock } from '../hooks/useScreenWakeLock'
 
 const initialClock: ClockState = { minutes: 5, seconds: 0 }
 const initialRestClock: ClockState = { minutes: 1, seconds: 0 }
-const startGongUrl = `${import.meta.env.BASE_URL}start_gong.mp3`
 const highBeepUrl = `${import.meta.env.BASE_URL}high_beep.mp3`
 const endGongUrl = `${import.meta.env.BASE_URL}end_gong.mp3`
+const startGongUrl = endGongUrl
 const lowBeepUrl = `${import.meta.env.BASE_URL}low_beep.mp3`
 
 const clampTimeValue = (value: number): number =>
