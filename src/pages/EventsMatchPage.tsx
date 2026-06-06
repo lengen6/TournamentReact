@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTournamentStore } from '../store/useTournamentStore'
-import { useAmbientAudioSession } from '../hooks/useAmbientAudioSession'
+import { useTimerAudioCue } from '../hooks/useTimerAudioCue'
 import { useScreenWakeLock } from '../hooks/useScreenWakeLock'
 
 type ClockState = {
@@ -14,21 +14,6 @@ const startGongUrl = `${import.meta.env.BASE_URL}start_gong.mp3`
 const highBeepUrl = `${import.meta.env.BASE_URL}high_beep.mp3`
 const endGongUrl = `${import.meta.env.BASE_URL}end_gong.mp3`
 const lowBeepUrl = `${import.meta.env.BASE_URL}low_beep.mp3`
-
-const playAudio = (
-  audioElement: HTMLAudioElement | null,
-  preparePlayback?: () => void,
-) => {
-  if (!audioElement) {
-    return
-  }
-
-  preparePlayback?.()
-  audioElement.currentTime = 0
-  void audioElement.play().catch(() => {
-    // Ignore autoplay errors.
-  })
-}
 
 const clampTimeValue = (value: number): number =>
   Math.max(0, Math.min(60, Math.floor(value)))
@@ -51,7 +36,7 @@ export function EventsMatchPage() {
   const [hasStarted, setHasStarted] = useState(false)
   const [isRunning, setIsRunning] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
-  const ensureAmbientAudioSession = useAmbientAudioSession()
+  const playTimerAudioCue = useTimerAudioCue()
   useScreenWakeLock(isRunning && !isPaused)
 
   const redCompetitor = competitors.find(
@@ -78,15 +63,14 @@ export function EventsMatchPage() {
             : { minutes: Math.max(0, previousClock.minutes - 1), seconds: 59 }
 
         if (nextClock.minutes === 0 && nextClock.seconds === 30) {
-          playAudio(highBeepRef.current, ensureAmbientAudioSession)
-          window.setTimeout(
-            () => playAudio(highBeepRef.current, ensureAmbientAudioSession),
-            500,
-          )
+          void playTimerAudioCue(highBeepRef.current, {
+            repeatCount: 2,
+            repeatDelayMs: 500,
+          })
         }
 
         if (nextClock.minutes === 0 && nextClock.seconds === 0) {
-          playAudio(endGongRef.current, ensureAmbientAudioSession)
+          void playTimerAudioCue(endGongRef.current)
           setIsRunning(false)
           setIsPaused(false)
         }
@@ -96,7 +80,7 @@ export function EventsMatchPage() {
     }, 1000)
 
     return () => window.clearInterval(timer)
-  }, [ensureAmbientAudioSession, isPaused, isRunning])
+  }, [isPaused, isRunning, playTimerAudioCue])
 
   if (!activeMatch || !redCompetitor || !blueCompetitor) {
     return (
@@ -153,7 +137,7 @@ export function EventsMatchPage() {
     setHasStarted(true)
     setIsPaused(false)
     setIsRunning(true)
-    playAudio(startGongRef.current, ensureAmbientAudioSession)
+    void playTimerAudioCue(startGongRef.current)
   }
 
   const handleTimerReset = () => {
@@ -171,11 +155,10 @@ export function EventsMatchPage() {
       return
     }
 
-    playAudio(lowBeepRef.current, ensureAmbientAudioSession)
-    window.setTimeout(
-      () => playAudio(lowBeepRef.current, ensureAmbientAudioSession),
-      500,
-    )
+    void playTimerAudioCue(lowBeepRef.current, {
+      repeatCount: 2,
+      repeatDelayMs: 500,
+    })
     setIsPaused(true)
   }
 
@@ -184,7 +167,7 @@ export function EventsMatchPage() {
       return
     }
 
-    playAudio(lowBeepRef.current, ensureAmbientAudioSession)
+    void playTimerAudioCue(lowBeepRef.current)
     setIsPaused(false)
   }
 

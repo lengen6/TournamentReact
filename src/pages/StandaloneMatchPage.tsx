@@ -5,7 +5,7 @@ import {
   isClockEmpty,
   type TimerPhase,
 } from './standaloneTimer'
-import { useAmbientAudioSession } from '../hooks/useAmbientAudioSession'
+import { useTimerAudioCue } from '../hooks/useTimerAudioCue'
 import { useScreenWakeLock } from '../hooks/useScreenWakeLock'
 
 const initialClock: ClockState = { minutes: 5, seconds: 0 }
@@ -14,21 +14,6 @@ const startGongUrl = `${import.meta.env.BASE_URL}start_gong.mp3`
 const highBeepUrl = `${import.meta.env.BASE_URL}high_beep.mp3`
 const endGongUrl = `${import.meta.env.BASE_URL}end_gong.mp3`
 const lowBeepUrl = `${import.meta.env.BASE_URL}low_beep.mp3`
-
-const playAudio = (
-  audioElement: HTMLAudioElement | null,
-  preparePlayback?: () => void,
-) => {
-  if (!audioElement) {
-    return
-  }
-
-  preparePlayback?.()
-  audioElement.currentTime = 0
-  void audioElement.play().catch(() => {
-    // Ignore autoplay errors.
-  })
-}
 
 const clampTimeValue = (value: number): number =>
   Math.max(0, Math.min(60, Math.floor(value)))
@@ -54,7 +39,7 @@ export function StandaloneMatchPage() {
   const [isRepeatEnabled, setIsRepeatEnabled] = useState(false)
   const [phase, setPhase] = useState<TimerPhase>('round')
   const [resultMessage, setResultMessage] = useState<string | null>(null)
-  const ensureAmbientAudioSession = useAmbientAudioSession()
+  const playTimerAudioCue = useTimerAudioCue()
   useScreenWakeLock(isRunning && !isPaused)
 
   useEffect(() => {
@@ -72,19 +57,18 @@ export function StandaloneMatchPage() {
         })
 
         if (tick.playHighBeep) {
-          playAudio(highBeepRef.current, ensureAmbientAudioSession)
-          window.setTimeout(
-            () => playAudio(highBeepRef.current, ensureAmbientAudioSession),
-            500,
-          )
+          void playTimerAudioCue(highBeepRef.current, {
+            repeatCount: 2,
+            repeatDelayMs: 500,
+          })
         }
 
         if (tick.playEndGong) {
-          playAudio(endGongRef.current, ensureAmbientAudioSession)
+          void playTimerAudioCue(endGongRef.current)
         }
 
         if (tick.playStartGong) {
-          playAudio(startGongRef.current, ensureAmbientAudioSession)
+          void playTimerAudioCue(startGongRef.current)
         }
 
         if (!tick.shouldKeepRunning) {
@@ -102,11 +86,11 @@ export function StandaloneMatchPage() {
 
     return () => window.clearInterval(timer)
   }, [
-    ensureAmbientAudioSession,
     isPaused,
     isRepeatEnabled,
     isRunning,
     phase,
+    playTimerAudioCue,
     restDuration,
     roundDuration,
   ])
@@ -188,7 +172,7 @@ export function StandaloneMatchPage() {
     setHasStarted(true)
     setIsPaused(false)
     setIsRunning(true)
-    playAudio(startGongRef.current, ensureAmbientAudioSession)
+    void playTimerAudioCue(startGongRef.current)
   }
 
   const handleTimerReset = () => {
@@ -209,11 +193,10 @@ export function StandaloneMatchPage() {
       return
     }
 
-    playAudio(lowBeepRef.current, ensureAmbientAudioSession)
-    window.setTimeout(
-      () => playAudio(lowBeepRef.current, ensureAmbientAudioSession),
-      500,
-    )
+    void playTimerAudioCue(lowBeepRef.current, {
+      repeatCount: 2,
+      repeatDelayMs: 500,
+    })
     setIsPaused(true)
   }
 
@@ -222,7 +205,7 @@ export function StandaloneMatchPage() {
       return
     }
 
-    playAudio(lowBeepRef.current, ensureAmbientAudioSession)
+    void playTimerAudioCue(lowBeepRef.current)
     setIsPaused(false)
   }
 

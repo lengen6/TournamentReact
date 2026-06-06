@@ -10,6 +10,7 @@
     "types": ["node"]
   },
   "include": [
+    "src/hooks/useTimerAudioCue.ts",
     "src/models/**/*.ts",
     "src/store/useTournamentStore.ts",
     "src/pages/standaloneTimer.ts"
