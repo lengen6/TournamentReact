@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTournamentStore } from '../store/useTournamentStore'
-import { useTimerAudioCue } from '../hooks/useTimerAudioCue'
+import {
+  unlockTimerAudioElements,
+  useTimerAudioCue,
+} from '../hooks/useTimerAudioCue'
 import { useScreenWakeLock } from '../hooks/useScreenWakeLock'
 
 type ClockState = {
@@ -137,6 +140,11 @@ export function EventsMatchPage() {
     setHasStarted(true)
     setIsPaused(false)
     setIsRunning(true)
+    unlockTimerAudioElements([
+      highBeepRef.current,
+      endGongRef.current,
+      lowBeepRef.current,
+    ])
     void playTimerAudioCue(startGongRef.current)
   }
 

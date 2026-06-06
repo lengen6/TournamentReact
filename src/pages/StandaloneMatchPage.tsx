@@ -5,7 +5,10 @@ import {
   isClockEmpty,
   type TimerPhase,
 } from './standaloneTimer'
-import { useTimerAudioCue } from '../hooks/useTimerAudioCue'
+import {
+  unlockTimerAudioElements,
+  useTimerAudioCue,
+} from '../hooks/useTimerAudioCue'
 import { useScreenWakeLock } from '../hooks/useScreenWakeLock'
 
 const initialClock: ClockState = { minutes: 5, seconds: 0 }
@@ -172,6 +175,11 @@ export function StandaloneMatchPage() {
     setHasStarted(true)
     setIsPaused(false)
     setIsRunning(true)
+    unlockTimerAudioElements([
+      highBeepRef.current,
+      endGongRef.current,
+      lowBeepRef.current,
+    ])
     void playTimerAudioCue(startGongRef.current)
   }
 

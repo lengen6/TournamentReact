@@ -102,6 +102,64 @@ const wait = (delayMs: number) =>
     setTimeout(resolve, delayMs)
   })
 
+const isAudioElement = (
+  audioElement: HTMLAudioElement | null,
+): audioElement is HTMLAudioElement => Boolean(audioElement)
+
+const unlockAudioElement = (audioElement: HTMLAudioElement) => {
+  let isSettled = false
+  const originalMuted = audioElement.muted
+
+  const settle = () => {
+    if (isSettled) {
+      return
+    }
+
+    isSettled = true
+    clearTimeout(unlockTimer)
+
+    try {
+      audioElement.pause()
+    } catch {
+      // Ignore cleanup failures from browser-specific media state.
+    }
+
+    try {
+      audioElement.currentTime = 0
+    } catch {
+      // Some browsers may reject currentTime changes before media is ready.
+    }
+
+    audioElement.muted = originalMuted
+  }
+
+  const unlockTimer = setTimeout(settle, 250)
+
+  try {
+    audioElement.muted = true
+    audioElement.currentTime = 0
+  } catch {
+    // Keep going: the play call is the important part for iOS unlocking.
+  }
+
+  try {
+    const playback = audioElement.play()
+    void playback.then(settle).catch(settle)
+  } catch {
+    settle()
+  }
+}
+
+export const unlockTimerAudioElements = (
+  audioElements: Array<HTMLAudioElement | null>,
+) => {
+  const uniqueAudioElements = new Set(audioElements.filter(isAudioElement))
+
+  uniqueAudioElements.forEach((audioElement) => {
+    unlockAudioElement(audioElement)
+  })
+}
+
 const playAudioElementOnce = (
   audioElement: HTMLAudioElement,
   failsafeMs: number,
