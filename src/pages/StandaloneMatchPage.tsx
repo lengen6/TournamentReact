@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   type ClockState,
   computeStandaloneTimerTick,
@@ -22,6 +22,11 @@ const formatTime = (clock: ClockState): string =>
   `${clock.minutes}:${String(clock.seconds).padStart(2, '0')}`
 
 export function StandaloneMatchPage() {
+  const startGongRef = useRef<HTMLAudioElement>(null)
+  const highBeepRef = useRef<HTMLAudioElement>(null)
+  const endGongRef = useRef<HTMLAudioElement>(null)
+  const lowBeepRef = useRef<HTMLAudioElement>(null)
+
   const [clock, setClock] = useState<ClockState>(initialClock)
   const [matchStartClock, setMatchStartClock] = useState<ClockState | null>(null)
   const [roundDuration, setRoundDuration] = useState<ClockState>(initialClock)
@@ -52,18 +57,18 @@ export function StandaloneMatchPage() {
         })
 
         if (tick.playHighBeep) {
-          void playTimerAudioCue(highBeepUrl, {
+          void playTimerAudioCue(highBeepRef.current, {
             repeatCount: 2,
             repeatDelayMs: 500,
           })
         }
 
         if (tick.playEndGong) {
-          void playTimerAudioCue(endGongUrl)
+          void playTimerAudioCue(endGongRef.current)
         }
 
         if (tick.playStartGong) {
-          void playTimerAudioCue(startGongUrl)
+          void playTimerAudioCue(startGongRef.current)
         }
 
         if (!tick.shouldKeepRunning) {
@@ -167,7 +172,7 @@ export function StandaloneMatchPage() {
     setHasStarted(true)
     setIsPaused(false)
     setIsRunning(true)
-    void playTimerAudioCue(startGongUrl)
+    void playTimerAudioCue(startGongRef.current)
   }
 
   const handleTimerReset = () => {
@@ -188,7 +193,7 @@ export function StandaloneMatchPage() {
       return
     }
 
-    void playTimerAudioCue(lowBeepUrl, {
+    void playTimerAudioCue(lowBeepRef.current, {
       repeatCount: 2,
       repeatDelayMs: 500,
     })
@@ -200,7 +205,7 @@ export function StandaloneMatchPage() {
       return
     }
 
-    void playTimerAudioCue(lowBeepUrl)
+    void playTimerAudioCue(lowBeepRef.current)
     setIsPaused(false)
   }
 
@@ -483,6 +488,42 @@ export function StandaloneMatchPage() {
         </p>
       ) : null}
 
+      <audio
+        id="standalone-start-gong"
+        className="sound"
+        ref={startGongRef}
+        preload="auto"
+        playsInline
+      >
+        <source src={startGongUrl} />
+      </audio>
+      <audio
+        id="standalone-high-beep"
+        className="sound"
+        ref={highBeepRef}
+        preload="auto"
+        playsInline
+      >
+        <source src={highBeepUrl} />
+      </audio>
+      <audio
+        id="standalone-end-gong"
+        className="sound"
+        ref={endGongRef}
+        preload="auto"
+        playsInline
+      >
+        <source src={endGongUrl} />
+      </audio>
+      <audio
+        id="standalone-low-beep"
+        className="sound"
+        ref={lowBeepRef}
+        preload="auto"
+        playsInline
+      >
+        <source src={lowBeepUrl} />
+      </audio>
     </main>
   )
 }

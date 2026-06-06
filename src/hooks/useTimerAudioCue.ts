@@ -1,4 +1,18 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
+
+type AudioSessionType =
+  | 'auto'
+  | 'playback'
+  | 'transient'
+  | 'transient-solo'
+  | 'ambient'
+  | 'play-and-record'
+
+type NavigatorWithAudioSession = Navigator & {
+  audioSession?: {
+    type: AudioSessionType
+  }
+}
 
 export type TimerAudioCueOptions = {
   repeatCount?: number
@@ -6,9 +20,63 @@ export type TimerAudioCueOptions = {
   failsafeMs?: number
 }
 
+const timerCueSessionType: AudioSessionType = 'transient-solo'
+const restingSessionType: AudioSessionType = 'ambient'
 const defaultRepeatCount = 1
 const defaultRepeatDelayMs = 0
 const defaultFailsafeMs = 6000
+let activeTimerCueCount = 0
+
+const supportsAudioSession = (
+  value: Navigator,
+): value is NavigatorWithAudioSession =>
+  'audioSession' in value && Boolean((value as NavigatorWithAudioSession).audioSession)
+
+const getAudioSession = () => {
+  if (typeof navigator === 'undefined' || !supportsAudioSession(navigator)) {
+    return null
+  }
+
+  return navigator.audioSession ?? null
+}
+
+const setAudioSessionType = (type: AudioSessionType) => {
+  const audioSession = getAudioSession()
+
+  if (!audioSession) {
+    return
+  }
+
+  try {
+    if (audioSession.type !== type) {
+      audioSession.type = type
+    }
+  } catch {
+    // Ignore unsupported or denied session updates.
+  }
+}
+
+const requestTimerAudioFocus = () => {
+  if (activeTimerCueCount === 0) {
+    setAudioSessionType(timerCueSessionType)
+  }
+
+  activeTimerCueCount += 1
+}
+
+const releaseTimerAudioFocus = () => {
+  activeTimerCueCount = Math.max(0, activeTimerCueCount - 1)
+
+  if (activeTimerCueCount === 0) {
+    setAudioSessionType(restingSessionType)
+  }
+}
+
+const ensureRestingTimerAudioFocus = () => {
+  if (activeTimerCueCount === 0) {
+    setAudioSessionType(restingSessionType)
+  }
+}
 
 const normalizePositiveInteger = (value: number | undefined, fallback: number) => {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
@@ -34,28 +102,12 @@ const wait = (delayMs: number) =>
     setTimeout(resolve, delayMs)
   })
 
-const disposeAudioElement = (audioElement: HTMLAudioElement) => {
-  try {
-    audioElement.pause()
-  } catch {
-    // Ignore cleanup failures from browser-specific media state.
-  }
-
-  try {
-    audioElement.removeAttribute('src')
-    audioElement.load()
-  } catch {
-    // Best effort: clearing src + load nudges browsers to release the stream.
-  }
-}
-
-const playAudioSourceOnce = (sourceUrl: string, failsafeMs: number) =>
+const playAudioElementOnce = (
+  audioElement: HTMLAudioElement,
+  failsafeMs: number,
+) =>
   new Promise<void>((resolve) => {
-    const audioElement = new Audio(sourceUrl)
     let isSettled = false
-
-    audioElement.preload = 'auto'
-    audioElement.setAttribute('playsinline', '')
 
     const settle = () => {
       if (isSettled) {
@@ -66,7 +118,6 @@ const playAudioSourceOnce = (sourceUrl: string, failsafeMs: number) =>
       audioElement.removeEventListener('ended', settle)
       audioElement.removeEventListener('error', settle)
       clearTimeout(failsafeTimer)
-      disposeAudioElement(audioElement)
 
       resolve()
     }
@@ -91,10 +142,10 @@ const playAudioSourceOnce = (sourceUrl: string, failsafeMs: number) =>
   })
 
 export const playTimerAudioCue = async (
-  sourceUrl: string | null,
+  audioElement: HTMLAudioElement | null,
   options: TimerAudioCueOptions = {},
 ) => {
-  if (!sourceUrl) {
+  if (!audioElement) {
     return
   }
 
@@ -111,18 +162,31 @@ export const playTimerAudioCue = async (
     defaultFailsafeMs,
   )
 
-  for (let cueIndex = 0; cueIndex < repeatCount; cueIndex += 1) {
-    await playAudioSourceOnce(sourceUrl, failsafeMs)
+  requestTimerAudioFocus()
 
-    if (cueIndex < repeatCount - 1 && repeatDelayMs > 0) {
-      await wait(repeatDelayMs)
+  try {
+    for (let cueIndex = 0; cueIndex < repeatCount; cueIndex += 1) {
+      await playAudioElementOnce(audioElement, failsafeMs)
+
+      if (cueIndex < repeatCount - 1 && repeatDelayMs > 0) {
+        await wait(repeatDelayMs)
+      }
     }
+  } finally {
+    releaseTimerAudioFocus()
   }
 }
 
-export const useTimerAudioCue = () =>
-  useCallback(
-    (sourceUrl: string | null, options?: TimerAudioCueOptions) =>
-      playTimerAudioCue(sourceUrl, options),
+export const useTimerAudioCue = () => {
+  const playCue = useCallback(
+    (audioElement: HTMLAudioElement | null, options?: TimerAudioCueOptions) =>
+      playTimerAudioCue(audioElement, options),
     [],
   )
+
+  useEffect(() => {
+    ensureRestingTimerAudioFocus()
+  }, [])
+
+  return playCue
+}
