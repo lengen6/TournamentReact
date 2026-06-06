@@ -1,4 +1,7 @@
-const { playTimerAudioCue } = require('../test-dist/hooks/useTimerAudioCue.js')
+const {
+  playTimerAudioCue,
+  unlockTimerAudioElements,
+} = require('../test-dist/hooks/useTimerAudioCue.js')
 
 const setNavigator = (value) => {
   Object.defineProperty(global, 'navigator', {
@@ -12,6 +15,8 @@ const createAudioElement = (play = jest.fn(() => Promise.resolve())) => {
 
   return {
     currentTime: 12,
+    muted: false,
+    pause: jest.fn(),
     play,
     addEventListener: jest.fn((eventName, listener) => {
       listeners.set(eventName, listener)
@@ -139,4 +144,38 @@ test('does not request audio focus when no audio element is provided', async () 
   await playTimerAudioCue(null)
 
   expect(audioSession.type).toBe('ambient')
+})
+
+test('silently primes audio elements for later timer playback', async () => {
+  const firstAudioElement = createAudioElement()
+  const secondAudioElement = createAudioElement()
+  secondAudioElement.muted = true
+
+  unlockTimerAudioElements([firstAudioElement, secondAudioElement, null])
+
+  expect(firstAudioElement.muted).toBe(true)
+  expect(secondAudioElement.muted).toBe(true)
+  expect(firstAudioElement.currentTime).toBe(0)
+  expect(secondAudioElement.currentTime).toBe(0)
+  expect(firstAudioElement.play).toHaveBeenCalledTimes(1)
+  expect(secondAudioElement.play).toHaveBeenCalledTimes(1)
+
+  await Promise.resolve()
+
+  expect(firstAudioElement.pause).toHaveBeenCalledTimes(1)
+  expect(secondAudioElement.pause).toHaveBeenCalledTimes(1)
+  expect(firstAudioElement.currentTime).toBe(0)
+  expect(secondAudioElement.currentTime).toBe(0)
+  expect(firstAudioElement.muted).toBe(false)
+  expect(secondAudioElement.muted).toBe(true)
+})
+
+test('silently primes each unique audio element only once', async () => {
+  const audioElement = createAudioElement()
+
+  unlockTimerAudioElements([audioElement, audioElement, null])
+
+  expect(audioElement.play).toHaveBeenCalledTimes(1)
+
+  await Promise.resolve()
 })
