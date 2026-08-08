@@ -86,14 +86,35 @@ test('returns competitor_count_error when fewer than two competitors are availab
   expect(useTournamentStore.getState().activeMatch).toBeNull()
 })
 
-test('returns competitor_count_error when more than eight competitors are available', () => {
-  createRoster(9)
+test('returns competitor_count_error when round robin has more than six competitors', () => {
+  createRoster(7)
   useTournamentStore.getState().beginEvent(2, 'round_robin')
 
   const result = useTournamentStore.getState().advanceEvent()
 
   expect(result).toEqual({ status: 'competitor_count_error' })
   expect(useTournamentStore.getState().activeMatch).toBeNull()
+})
+
+test('returns competitor_count_error when double elimination has more than eight competitors', () => {
+  createRoster(9)
+  useTournamentStore.getState().beginEvent(2, 'elimination')
+
+  const result = useTournamentStore.getState().advanceEvent()
+
+  expect(result).toEqual({ status: 'competitor_count_error' })
+  expect(useTournamentStore.getState().activeMatch).toBeNull()
+})
+
+test('allows single elimination events with up to sixteen competitors', () => {
+  createRoster(16)
+  useTournamentStore.getState().beginEvent(1, 'elimination')
+  mockRandomSequence(0)
+
+  const result = useTournamentStore.getState().advanceEvent()
+
+  expect(result.status).toBe('match_ready')
+  expect(useTournamentStore.getState().activeMatch).not.toBeNull()
 })
 
 test('keeps returning the current active match until it is completed', () => {

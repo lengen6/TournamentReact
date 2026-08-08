@@ -1,7 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom'
 import type { FormEvent } from 'react'
 import {
-  maximumEventCompetitors,
+  getMaximumEventCompetitors,
+  maximumRosterCompetitors,
   useTournamentStore,
   type EventMode,
 } from '../../store/useTournamentStore'
@@ -14,6 +15,7 @@ export function CompetitorsIndexPage() {
   const setEventMode = useTournamentStore((state) => state.setEventMode)
   const beginEvent = useTournamentStore((state) => state.beginEvent)
   const navigate = useNavigate()
+  const maximumEventCompetitors = getMaximumEventCompetitors(eventMode, elimination)
   const participantCountIsValid =
     competitors.length >= 2 && competitors.length <= maximumEventCompetitors
 
@@ -28,11 +30,11 @@ export function CompetitorsIndexPage() {
       <h1 className="text-center">Create Your Roster</h1>
 
       <p className="text-center">
-        {competitors.length < maximumEventCompetitors ? (
+        {competitors.length < maximumRosterCompetitors ? (
           <Link to="/competitors/create">Add Competitor</Link>
         ) : (
           <span className="text-muted">
-            Maximum roster size is {maximumEventCompetitors} competitors.
+            Maximum roster size is {maximumRosterCompetitors} competitors.
           </span>
         )}
       </p>
@@ -114,7 +116,7 @@ export function CompetitorsIndexPage() {
                 </>
               ) : null}
               <p className="small text-muted mt-3 mb-0">
-                Events support 2 to {maximumEventCompetitors} competitors.
+                Selected event supports 2 to {maximumEventCompetitors} competitors.
               </p>
               <br />
               <button
@@ -126,7 +128,7 @@ export function CompetitorsIndexPage() {
               </button>
               {!participantCountIsValid ? (
                 <p className="small text-danger mt-2 mb-0">
-                  Add at least 2 competitors and keep the roster at {maximumEventCompetitors} or fewer.
+                  Add at least 2 competitors and keep this event at {maximumEventCompetitors} or fewer.
                 </p>
               ) : null}
               <p className="mt-3 mb-0">

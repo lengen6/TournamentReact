@@ -4,7 +4,7 @@ import { Match } from '../models/Match'
 
 export type DeleteCompetitorResult = 'deleted' | 'not_found' | 'has_history'
 export type EventMode = 'elimination' | 'round_robin'
-export const maximumEventCompetitors = 8
+export const maximumRosterCompetitors = 16
 
 export type ActiveMatch = {
   redCompetitorId: number
@@ -59,6 +59,17 @@ type TournamentState = {
 
 const toAllowedEliminationValue = (elimination: number): number =>
   elimination === 1 ? 1 : 2
+
+export const getMaximumEventCompetitors = (
+  eventMode: EventMode,
+  elimination: number,
+): number => {
+  if (eventMode === 'round_robin') {
+    return 6
+  }
+
+  return toAllowedEliminationValue(elimination) === 1 ? 16 : 8
+}
 
 const toAllowedEventMode = (eventMode: EventMode): EventMode =>
   eventMode === 'round_robin' ? 'round_robin' : 'elimination'
@@ -342,7 +353,11 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
         }
       }
 
-      if (competitors.length < 2 || competitors.length > maximumEventCompetitors) {
+      if (
+        competitors.length < 2 ||
+        competitors.length >
+          getMaximumEventCompetitors(state.eventMode, state.elimination)
+      ) {
         advanceResult = { status: 'competitor_count_error' }
         return { ...state, activeMatch: null, roundByeAssigned }
       }

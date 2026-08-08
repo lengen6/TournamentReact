@@ -26,7 +26,7 @@ const homeFeatureCards: HomeFeatureCard[] = [
   {
     title: "Matchmaking, Scoring, Timing, and Results All in One Place",
     description:
-      "OPEN[bracket] handles everything in one smooth integrated experience. Enter a roster, choose single or double elimination, and click start. It handles the rest.",
+      "OPEN[bracket] handles everything in one smooth integrated experience. Enter a roster, choose round robin, single, or double elimination, and click start. It handles the rest.",
     imageUrl: card2ImageUrl,
     imageAlt: "Inverted Armbar",
     ctaLabel: "Learn how the bracket logic works.",

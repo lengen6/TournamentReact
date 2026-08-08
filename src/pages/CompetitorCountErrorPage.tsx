@@ -4,7 +4,8 @@ export function CompetitorCountErrorPage() {
   return (
     <main className="container py-4">
       <h1>
-        Events need 2 to 8 competitors. Please update your roster and try again.
+        Events need at least 2 competitors. Round robin supports up to 6,
+        single elimination supports up to 16, and double elimination supports up to 8.
       </h1>
       <h3 className="mt-4">
         <Link to="/competitors">Click here to go back to setup</Link>
