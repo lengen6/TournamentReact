@@ -1,18 +1,26 @@
 import { Link, useNavigate } from 'react-router-dom'
 import type { FormEvent } from 'react'
-import { useTournamentStore } from '../../store/useTournamentStore'
+import {
+  maximumEventCompetitors,
+  useTournamentStore,
+  type EventMode,
+} from '../../store/useTournamentStore'
 
 export function CompetitorsIndexPage() {
   const competitors = useTournamentStore((state) => state.competitors)
   const elimination = useTournamentStore((state) => state.elimination)
+  const eventMode = useTournamentStore((state) => state.eventMode)
   const setElimination = useTournamentStore((state) => state.setElimination)
+  const setEventMode = useTournamentStore((state) => state.setEventMode)
   const beginEvent = useTournamentStore((state) => state.beginEvent)
   const navigate = useNavigate()
+  const participantCountIsValid =
+    competitors.length >= 2 && competitors.length <= maximumEventCompetitors
 
   const handleStartEvent = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    beginEvent(elimination)
-    navigate(`/events?elimination=${elimination}`)
+    beginEvent(elimination, eventMode)
+    navigate(`/events?elimination=${elimination}&mode=${eventMode}`)
   }
 
   return (
@@ -20,7 +28,13 @@ export function CompetitorsIndexPage() {
       <h1 className="text-center">Create Your Roster</h1>
 
       <p className="text-center">
-        <Link to="/competitors/create">Add Competitor</Link>
+        {competitors.length < maximumEventCompetitors ? (
+          <Link to="/competitors/create">Add Competitor</Link>
+        ) : (
+          <span className="text-muted">
+            Maximum roster size is {maximumEventCompetitors} competitors.
+          </span>
+        )}
       </p>
 
       <div className="table-responsive">
@@ -70,22 +84,51 @@ export function CompetitorsIndexPage() {
         <div className="row">
           <div className="col d-flex justify-content-center">
             <form onSubmit={handleStartEvent} className="text-center">
-              <label htmlFor="elimination" className="form-label">
-                No. of Eliminations
+              <label htmlFor="eventMode" className="form-label">
+                Event Style
               </label>
               <select
-                id="elimination"
+                id="eventMode"
                 className="form-select text-center"
-                value={elimination}
-                onChange={(event) => setElimination(Number(event.target.value))}
+                value={eventMode}
+                onChange={(event) => setEventMode(event.target.value as EventMode)}
               >
-                <option value={1}>-- 1 --</option>
-                <option value={2}>-- 2 --</option>
+                <option value="elimination">Elimination</option>
+                <option value="round_robin">Round Robin</option>
               </select>
+              {eventMode === 'elimination' ? (
+                <>
+                  <br />
+                  <label htmlFor="elimination" className="form-label">
+                    No. of Eliminations
+                  </label>
+                  <select
+                    id="elimination"
+                    className="form-select text-center"
+                    value={elimination}
+                    onChange={(event) => setElimination(Number(event.target.value))}
+                  >
+                    <option value={1}>-- 1 --</option>
+                    <option value={2}>-- 2 --</option>
+                  </select>
+                </>
+              ) : null}
+              <p className="small text-muted mt-3 mb-0">
+                Events support 2 to {maximumEventCompetitors} competitors.
+              </p>
               <br />
-              <button type="submit" className="btn btn-primary">
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={!participantCountIsValid}
+              >
                 Click to Start Event
               </button>
+              {!participantCountIsValid ? (
+                <p className="small text-danger mt-2 mb-0">
+                  Add at least 2 competitors and keep the roster at {maximumEventCompetitors} or fewer.
+                </p>
+              ) : null}
               <p className="mt-3 mb-0">
                 <Link to="/standalone-match">Or open standalone match controls</Link>
               </p>

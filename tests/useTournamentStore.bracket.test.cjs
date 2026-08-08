@@ -86,6 +86,16 @@ test('returns competitor_count_error when fewer than two competitors are availab
   expect(useTournamentStore.getState().activeMatch).toBeNull()
 })
 
+test('returns competitor_count_error when more than eight competitors are available', () => {
+  createRoster(9)
+  useTournamentStore.getState().beginEvent(2, 'round_robin')
+
+  const result = useTournamentStore.getState().advanceEvent()
+
+  expect(result).toEqual({ status: 'competitor_count_error' })
+  expect(useTournamentStore.getState().activeMatch).toBeNull()
+})
+
 test('keeps returning the current active match until it is completed', () => {
   createRoster(2)
   useTournamentStore.getState().beginEvent(2)
@@ -276,6 +286,41 @@ test('runs through a full double-elimination event and produces final placements
   expect(championCount).toBe(1)
   expect(allHavePlacement).toBe(true)
   expect(matches.length).toBeGreaterThan(0)
+})
+
+test('runs through a full round-robin event with every unique pairing once', () => {
+  createRoster(4)
+  useTournamentStore.getState().beginEvent(2, 'round_robin')
+
+  let finalResult = { status: 'idle' }
+  for (let iteration = 0; iteration < 10; iteration += 1) {
+    const result = useTournamentStore.getState().advanceEvent()
+    finalResult = result
+
+    if (result.status === 'results') {
+      break
+    }
+
+    expect(result.status).toBe('match_ready')
+    expect(result.activeMatch.bracket).toBe('Round Robin')
+    completeActiveMatch({ redWins: true })
+  }
+
+  expect(finalResult.status).toBe('results')
+
+  const { competitors, matches } = useTournamentStore.getState()
+  const pairKeys = new Set(
+    matches.map((match) =>
+      [match.competitorRedId, match.competitorBlueId].sort().join('-'),
+    ),
+  )
+
+  expect(matches).toHaveLength(6)
+  expect(pairKeys.size).toBe(6)
+  expect(matches.every((match) => match.bracket === 'Round Robin')).toBe(true)
+  expect(competitors.find((competitor) => competitor.competitorId === 1).wins).toBe(3)
+  expect(competitors.find((competitor) => competitor.competitorId === 1).place).toBe(1)
+  expect(competitors.every((competitor) => competitor.place > 0)).toBe(true)
 })
 
 test('clears stale active matches when a scheduled competitor no longer exists', () => {

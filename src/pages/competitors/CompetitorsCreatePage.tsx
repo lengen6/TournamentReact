@@ -1,12 +1,21 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useTournamentStore } from '../../store/useTournamentStore'
+import {
+  maximumEventCompetitors,
+  useTournamentStore,
+} from '../../store/useTournamentStore'
 import { CompetitorForm, type CompetitorFormValues } from './CompetitorForm'
 
 export function CompetitorsCreatePage() {
+  const competitors = useTournamentStore((state) => state.competitors)
   const addCompetitor = useTournamentStore((state) => state.addCompetitor)
   const navigate = useNavigate()
+  const rosterIsFull = competitors.length >= maximumEventCompetitors
 
   const handleCreateCompetitor = (values: CompetitorFormValues) => {
+    if (rosterIsFull) {
+      return
+    }
+
     addCompetitor(values)
     navigate('/competitors')
   }
@@ -18,7 +27,13 @@ export function CompetitorsCreatePage() {
       <hr />
       <div className="row">
         <div className="col-md-4">
-          <CompetitorForm submitLabel="Create" onSubmit={handleCreateCompetitor} />
+          {rosterIsFull ? (
+            <div className="alert alert-info" role="alert">
+              Events are limited to {maximumEventCompetitors} competitors.
+            </div>
+          ) : (
+            <CompetitorForm submitLabel="Create" onSubmit={handleCreateCompetitor} />
+          )}
         </div>
       </div>
       <div className="mt-3">
