@@ -102,12 +102,16 @@ export function EventsMatchPage() {
   const bluePointsEnabled = timeExpired && blueScore > redScore
   const decisionEnabled = timeExpired && redScore === blueScore
   const bracketLabel =
-    activeMatch.round === 1 &&
-    activeMatch.bracket === 'Winner' &&
-    redCompetitor.losses === 0 &&
-    blueCompetitor.losses === 0
+    activeMatch.bracket === 'Round Robin'
+      ? 'Round Robin'
+      : activeMatch.round === 1 &&
+          activeMatch.bracket === 'Winner' &&
+          redCompetitor.losses === 0 &&
+          blueCompetitor.losses === 0
       ? 'Initial'
       : activeMatch.bracket
+  const matchGroupLabel =
+    activeMatch.bracket === 'Round Robin' ? bracketLabel : `${bracketLabel} Bracket`
   const redCompetitorName = [redCompetitor.firstName, redCompetitor.lastName]
     .filter(Boolean)
     .join(' ')
@@ -200,7 +204,7 @@ export function EventsMatchPage() {
       <section className="active-match-header">
         <p className="active-match-kicker mb-0">Live Match Control</p>
         <div className="active-match-meta">
-          <span className="active-match-pill">{bracketLabel} Bracket</span>
+          <span className="active-match-pill">{matchGroupLabel}</span>
           <span className="active-match-pill">Round {activeMatch.round}</span>
           <span className="active-match-pill">Match {activeMatch.matchNumber}</span>
         </div>

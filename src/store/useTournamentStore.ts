@@ -3,13 +3,15 @@ import { Competitor } from '../models/Competitor'
 import { Match } from '../models/Match'
 
 export type DeleteCompetitorResult = 'deleted' | 'not_found' | 'has_history'
+export type EventMode = 'elimination' | 'round_robin'
+export const maximumRosterCompetitors = 16
 
 export type ActiveMatch = {
   redCompetitorId: number
   blueCompetitorId: number
   round: number
   matchNumber: number
-  bracket: 'Winner' | 'Loser'
+  bracket: 'Winner' | 'Loser' | 'Round Robin'
 }
 
 export type AdvanceEventResult =
@@ -33,6 +35,7 @@ type TournamentState = {
   competitors: Competitor[]
   matches: Match[]
   elimination: number
+  eventMode: EventMode
   currentRound: number
   currentMatchNumber: number
   roundByeAssigned: boolean
@@ -40,7 +43,8 @@ type TournamentState = {
   setCompetitors: (competitors: Competitor[]) => void
   setMatches: (matches: Match[]) => void
   setElimination: (elimination: number) => void
-  beginEvent: (elimination: number) => void
+  setEventMode: (eventMode: EventMode) => void
+  beginEvent: (elimination: number, eventMode?: EventMode) => void
   advanceEvent: () => AdvanceEventResult
   completeActiveMatch: (payload: CompleteMatchPayload) => Match | null
   resetCompetitorsForNextEvent: () => void
@@ -55,6 +59,20 @@ type TournamentState = {
 
 const toAllowedEliminationValue = (elimination: number): number =>
   elimination === 1 ? 1 : 2
+
+export const getMaximumEventCompetitors = (
+  eventMode: EventMode,
+  elimination: number,
+): number => {
+  if (eventMode === 'round_robin') {
+    return 6
+  }
+
+  return toAllowedEliminationValue(elimination) === 1 ? 16 : 8
+}
+
+const toAllowedEventMode = (eventMode: EventMode): EventMode =>
+  eventMode === 'round_robin' ? 'round_robin' : 'elimination'
 
 const getNextCompetitorId = (competitors: Competitor[]): number =>
   competitors.length === 0
@@ -159,10 +177,110 @@ const buildMatchReadyResult = (activeMatch: ActiveMatch): AdvanceEventResult => 
   activeMatch,
 })
 
+type RoundRobinScheduledMatch = {
+  redCompetitorId: number
+  blueCompetitorId: number
+  round: number
+  matchNumber: number
+}
+
+const getRoundRobinSchedule = (
+  competitors: Competitor[],
+): RoundRobinScheduledMatch[] => {
+  const participantIds = competitors.map((competitor) => competitor.competitorId)
+  const scheduledIds: Array<number | null> =
+    participantIds.length % 2 === 0 ? participantIds : [...participantIds, null]
+  const roundCount = scheduledIds.length - 1
+  const matchesPerRound = scheduledIds.length / 2
+  const schedule: RoundRobinScheduledMatch[] = []
+
+  for (let roundIndex = 0; roundIndex < roundCount; roundIndex += 1) {
+    for (let matchIndex = 0; matchIndex < matchesPerRound; matchIndex += 1) {
+      const redCompetitorId = scheduledIds[matchIndex]
+      const blueCompetitorId = scheduledIds[scheduledIds.length - 1 - matchIndex]
+
+      if (redCompetitorId !== null && blueCompetitorId !== null) {
+        schedule.push({
+          redCompetitorId,
+          blueCompetitorId,
+          round: roundIndex + 1,
+          matchNumber: matchIndex + 1,
+        })
+      }
+    }
+
+    const [fixedParticipant, ...rotatingParticipants] = scheduledIds
+    scheduledIds.splice(
+      0,
+      scheduledIds.length,
+      fixedParticipant,
+      rotatingParticipants[rotatingParticipants.length - 1],
+      ...rotatingParticipants.slice(0, -1),
+    )
+  }
+
+  return schedule
+}
+
+const getMatchPairKey = (
+  redCompetitorId?: number,
+  blueCompetitorId?: number,
+): string =>
+  [redCompetitorId, blueCompetitorId]
+    .sort((left, right) => Number(left) - Number(right))
+    .join('-')
+
+const setRoundRobinPlacements = (
+  competitors: Competitor[],
+  matches: Match[],
+) => {
+  const scoreDifferentials = new Map<number, number>()
+
+  for (const match of matches) {
+    const redDifferential = match.competitorRedScore - match.competitorBlueScore
+    const blueDifferential = match.competitorBlueScore - match.competitorRedScore
+
+    if (match.competitorRedId !== undefined) {
+      scoreDifferentials.set(
+        match.competitorRedId,
+        (scoreDifferentials.get(match.competitorRedId) ?? 0) + redDifferential,
+      )
+    }
+
+    if (match.competitorBlueId !== undefined) {
+      scoreDifferentials.set(
+        match.competitorBlueId,
+        (scoreDifferentials.get(match.competitorBlueId) ?? 0) + blueDifferential,
+      )
+    }
+  }
+
+  const standings = [...competitors].sort((left, right) => {
+    if (right.wins !== left.wins) {
+      return right.wins - left.wins
+    }
+
+    if (left.losses !== right.losses) {
+      return left.losses - right.losses
+    }
+
+    return (
+      (scoreDifferentials.get(right.competitorId) ?? 0) -
+      (scoreDifferentials.get(left.competitorId) ?? 0)
+    )
+  })
+
+  for (let index = 0; index < standings.length; index += 1) {
+    standings[index].place = index + 1
+    standings[index].bracket = index === 0 ? 'Winner' : 'Eliminated'
+  }
+}
+
 export const useTournamentStore = create<TournamentState>((set, get) => ({
   competitors: [],
   matches: [],
   elimination: 2,
+  eventMode: 'elimination',
   currentRound: 0,
   currentMatchNumber: 0,
   roundByeAssigned: false,
@@ -171,12 +289,14 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
   setMatches: (matches) => set({ matches }),
   setElimination: (elimination) =>
     set({ elimination: toAllowedEliminationValue(elimination) }),
-  beginEvent: (elimination) =>
+  setEventMode: (eventMode) => set({ eventMode: toAllowedEventMode(eventMode) }),
+  beginEvent: (elimination, eventMode = 'elimination') =>
     set((state) => ({
       competitors: cloneCompetitors(state.competitors).map(
         (competitor) =>
           new Competitor({
             ...competitor,
+            bracket: 'Winner',
             isRedComp: false,
             isBlueComp: false,
             previousParticipant: false,
@@ -184,6 +304,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
           }),
       ),
       elimination: toAllowedEliminationValue(elimination),
+      eventMode: toAllowedEventMode(eventMode),
       currentRound: 0,
       currentMatchNumber: 0,
       roundByeAssigned: false,
@@ -201,7 +322,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
       const buildActiveMatch = (
         redCompetitor: Competitor,
         blueCompetitor: Competitor,
-        bracket: 'Winner' | 'Loser',
+        bracket: ActiveMatch['bracket'],
       ): ActiveMatch => {
         if (round === 0) {
           round = 1
@@ -232,9 +353,81 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
         }
       }
 
-      if (competitors.length < 2) {
+      if (
+        competitors.length < 2 ||
+        competitors.length >
+          getMaximumEventCompetitors(state.eventMode, state.elimination)
+      ) {
         advanceResult = { status: 'competitor_count_error' }
         return { ...state, activeMatch: null, roundByeAssigned }
+      }
+
+      if (state.eventMode === 'round_robin') {
+        const completedPairs = new Set(
+          state.matches
+            .filter(
+              (match) =>
+                match.bracket === 'Round Robin' &&
+                match.competitorRedId !== undefined &&
+                match.competitorBlueId !== undefined,
+            )
+            .map((match) =>
+              getMatchPairKey(match.competitorRedId, match.competitorBlueId),
+            ),
+        )
+        const nextScheduledMatch = getRoundRobinSchedule(competitors).find(
+          (scheduledMatch) =>
+            !completedPairs.has(
+              getMatchPairKey(
+                scheduledMatch.redCompetitorId,
+                scheduledMatch.blueCompetitorId,
+              ),
+            ),
+        )
+
+        if (!nextScheduledMatch) {
+          setRoundRobinPlacements(competitors, state.matches)
+          advanceResult = { status: 'results' }
+          return {
+            ...state,
+            competitors,
+            currentRound: round,
+            currentMatchNumber: matchNumber,
+            roundByeAssigned,
+            activeMatch: null,
+          }
+        }
+
+        const redCompetitor = competitors.find(
+          (competitor) =>
+            competitor.competitorId === nextScheduledMatch.redCompetitorId,
+        )
+        const blueCompetitor = competitors.find(
+          (competitor) =>
+            competitor.competitorId === nextScheduledMatch.blueCompetitorId,
+        )
+
+        if (!redCompetitor || !blueCompetitor) {
+          advanceResult = { status: 'idle' }
+          return { ...state, competitors, activeMatch: null }
+        }
+
+        round = nextScheduledMatch.round
+        matchNumber = nextScheduledMatch.matchNumber - 1
+        const activeMatch = buildActiveMatch(
+          redCompetitor,
+          blueCompetitor,
+          'Round Robin',
+        )
+        advanceResult = buildMatchReadyResult(activeMatch)
+        return {
+          ...state,
+          competitors,
+          currentRound: round,
+          currentMatchNumber: matchNumber,
+          roundByeAssigned,
+          activeMatch,
+        }
       }
 
       for (let iteration = 0; iteration < 50; iteration += 1) {
@@ -426,18 +619,25 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
         return { ...state, competitors, activeMatch: null }
       }
 
-      const elimination = toAllowedEliminationValue(state.elimination)
       if (payload.redWins) {
         redCompetitor.wins += 1
         blueCompetitor.losses += 1
-        redCompetitor.bracket = 'Winner'
-        blueCompetitor.bracket =
-          blueCompetitor.losses >= elimination ? 'Eliminated' : 'Loser'
+
+        if (state.eventMode === 'elimination') {
+          const elimination = toAllowedEliminationValue(state.elimination)
+          redCompetitor.bracket = 'Winner'
+          blueCompetitor.bracket =
+            blueCompetitor.losses >= elimination ? 'Eliminated' : 'Loser'
+        }
       } else {
         blueCompetitor.wins += 1
         redCompetitor.losses += 1
-        blueCompetitor.bracket = 'Winner'
-        redCompetitor.bracket = redCompetitor.losses >= elimination ? 'Eliminated' : 'Loser'
+
+        if (state.eventMode === 'elimination') {
+          const elimination = toAllowedEliminationValue(state.elimination)
+          blueCompetitor.bracket = 'Winner'
+          redCompetitor.bracket = redCompetitor.losses >= elimination ? 'Eliminated' : 'Loser'
+        }
       }
 
       redCompetitor.isRedComp = false
@@ -569,6 +769,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
       competitors: [],
       matches: [],
       elimination: 2,
+      eventMode: 'elimination',
       currentRound: 0,
       currentMatchNumber: 0,
       roundByeAssigned: false,

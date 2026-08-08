@@ -5,7 +5,9 @@ import { useTournamentStore } from '../store/useTournamentStore'
 export function EventsIndexPage() {
   const [searchParams] = useSearchParams()
   const eliminationFromQuery = searchParams.get('elimination')
+  const modeFromQuery = searchParams.get('mode')
   const setElimination = useTournamentStore((state) => state.setElimination)
+  const setEventMode = useTournamentStore((state) => state.setEventMode)
   const advanceEvent = useTournamentStore((state) => state.advanceEvent)
   const navigate = useNavigate()
   const didProcessNavigation = useRef(false)
@@ -18,6 +20,10 @@ export function EventsIndexPage() {
 
     if (eliminationFromQuery === '1' || eliminationFromQuery === '2') {
       setElimination(Number(eliminationFromQuery))
+    }
+
+    if (modeFromQuery === 'elimination' || modeFromQuery === 'round_robin') {
+      setEventMode(modeFromQuery)
     }
 
     const eventState = advanceEvent()
@@ -37,7 +43,7 @@ export function EventsIndexPage() {
     }
 
     navigate('/', { replace: true })
-  }, [advanceEvent, eliminationFromQuery, navigate, setElimination])
+  }, [advanceEvent, eliminationFromQuery, modeFromQuery, navigate, setElimination, setEventMode])
 
   return (
     <main className="container py-4">
